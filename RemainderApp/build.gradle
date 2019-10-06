@@ -21,6 +21,13 @@ allprojects {
         jcenter()
         
     }
+    project.ext {
+        minSdkVersion=18
+        targetSdkVersion=28
+        compileSdkVersion=28
+        versionCode = 1
+        versionName = "1.0"
+    }
 }
 
 task clean(type: Delete) {
@@ -32,4 +39,7 @@ ext {
     runnerversion = "1.0.2"
     espressoversion = "3.0.2"
     roompersistanceversion = "1.1.1"
+    firebaseversion = "16.0.8"
+    firedatabaseversion = "16.1.0"
+    firebaseauthversion = "16.2.0"
 }
