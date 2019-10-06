@@ -2,13 +2,11 @@ package com.udayasreesoft.remainderapp.activities
 
 import android.content.Intent
 import android.graphics.Point
+import android.graphics.Typeface
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import android.widget.AutoCompleteTextView
-import android.widget.Button
-import android.widget.EditText
-import android.widget.LinearLayout
+import android.widget.*
 import com.udayasreesoft.remainderapp.R
 import com.udayasreesoft.remainderapp.utils.AppUtils
 
@@ -43,8 +41,9 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         loginMobile = findViewById(R.id.login_mobile_id)
         loginOutletName = findViewById(R.id.login_outlet_name_id)
         loginBtn = findViewById(R.id.login_login_btn_id)
+        findViewById<TextView>(R.id.login_title_id).typeface = Typeface.createFromAsset(assets, "fonts/sundaprada.ttf")
 
-        loginLayout.layoutParams.width = (AppUtils.SCREEN_WIDTH * 0.90).toInt()
+        loginLayout.layoutParams.width = (AppUtils.SCREEN_WIDTH * 0.80).toInt()
         loginLayout.layoutParams.height = (AppUtils.SCREEN_WIDTH * 0.80).toInt()
 
         loginBtn.setOnClickListener(this)
