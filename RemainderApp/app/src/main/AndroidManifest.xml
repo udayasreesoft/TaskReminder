@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools"
-          package="com.udayasreesoft.remainderapp">
+        xmlns:tools="http://schemas.android.com/tools"
+        package="com.udayasreesoft.remainderapp">
 
     <application
             android:name=".appclass.ApplicationClass"
@@ -13,34 +13,34 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme"
             tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".ReminderTaskActivity">
-        </activity>
-        <activity android:name=".ReminderListActivity">
+        <activity android:name=".activities.ReminderListActivity"/>
+        <activity android:name=".activities.ReminderTaskActivity"/>
+        <activity android:name=".activities.LoginActivity">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <receiver
                 android:name=".notification.TimerNotificationBroadCastReceiver"
-                android:enabled="true"/>
+                android:enabled="true" />
         <receiver
                 android:name=".notification.RebootBroadCastReceiver"
                 android:enabled="true">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 
         <service
                 android:name=".notification.ShortRunService"
                 android:enabled="true"
-                android:stopWithTask="false"/>
+                android:stopWithTask="false" />
         <service
                 android:name=".notification.ShortRunScheduler"
-                android:permission="android.permission.BIND_JOB_SERVICE"/>
+                android:permission="android.permission.BIND_JOB_SERVICE" />
     </application>
 
 </manifest>

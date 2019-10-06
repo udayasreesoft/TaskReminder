@@ -6,9 +6,21 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/window_background"
-        tools:context=".ReminderListActivity">
+        tools:context=".activities.ReminderListActivity">
+    <TextView
+            android:id="@+id/remainder_total_text_id"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:gravity="start"
+            android:padding="5dp"
+            android:background="@color/colorAccent"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
     <android.support.v7.widget.RecyclerView
             android:id="@+id/remainder_list_recycler_id"
+            android:layout_below="@+id/remainder_total_text_id"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
     <TextView
@@ -29,5 +41,16 @@
             android:layout_margin="20dp"
             android:src="@android:drawable/ic_input_add"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            tools:ignore="RelativeOverlap"/>
+
+    <ProgressBar
+            android:id="@+id/remainder_progressbar_id"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:clickable="false"
+            android:max="100"
+            android:layout_centerInParent="true"/>
 </RelativeLayout>

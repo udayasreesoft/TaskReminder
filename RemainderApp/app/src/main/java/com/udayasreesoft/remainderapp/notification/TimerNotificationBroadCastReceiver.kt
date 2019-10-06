@@ -14,12 +14,9 @@ import android.os.AsyncTask
 import android.os.Build
 import android.support.annotation.RequiresApi
 import android.support.v4.app.NotificationCompat
-import android.support.v4.content.ContextCompat
-import android.text.format.DateUtils
-import android.widget.RemoteViews
 import com.udayasreesoft.remainderapp.utils.AppUtils
 import com.udayasreesoft.remainderapp.R
-import com.udayasreesoft.remainderapp.ReminderListActivity
+import com.udayasreesoft.remainderapp.activities.ReminderListActivity
 import com.udayasreesoft.remainderapp.roomdatabase.TaskDataTable
 import com.udayasreesoft.remainderapp.roomdatabase.TaskRepository
 import com.udayasreesoft.remainderapp.utils.ConstantUtils

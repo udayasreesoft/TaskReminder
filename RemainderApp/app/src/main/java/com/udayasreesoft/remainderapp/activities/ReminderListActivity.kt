@@ -1,52 +1,48 @@
-package com.udayasreesoft.remainderapp
+package com.udayasreesoft.remainderapp.activities
 
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.DatePickerDialog
-import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Point
 import android.os.AsyncTask
-import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
+import android.support.v4.os.ConfigurationCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.*
+import com.udayasreesoft.remainderapp.R
+import com.udayasreesoft.remainderapp.adapters.TaskAdapter
 import com.udayasreesoft.remainderapp.roomdatabase.TaskDataTable
 import java.text.SimpleDateFormat
 import java.util.*
 import com.udayasreesoft.remainderapp.roomdatabase.TaskRepository
 import com.udayasreesoft.remainderapp.utils.AppUtils
 import com.udayasreesoft.remainderapp.utils.ConstantUtils
+import java.text.NumberFormat
 import kotlin.collections.ArrayList
 
 
-class ReminderListActivity : AppCompatActivity(), View.OnClickListener, TaskAdapter.TaskInterface {
+class ReminderListActivity : AppCompatActivity(), View.OnClickListener,
+    TaskAdapter.TaskInterface {
 
     private lateinit var remainderRecyclerView: RecyclerView
     private lateinit var emptyTextView: TextView
     private lateinit var fabAddTask: FloatingActionButton
+    private lateinit var paymentTotalText : TextView
+    private lateinit var progressBar : ProgressBar
+    private var clickStatus = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_remainder_list)
-        screenSize()
         initView()
-    }
-
-    private fun screenSize() {
-        val size = Point()
-        val w = windowManager
-
-        w.defaultDisplay.getSize(size)
-        AppUtils.SCREEN_WIDTH = size.x
-        AppUtils.SCREEN_HEIGHT = size.y
     }
 
     /*TODO : init view*/
@@ -55,7 +51,9 @@ class ReminderListActivity : AppCompatActivity(), View.OnClickListener, TaskAdap
         emptyTextView = findViewById(R.id.remainder_lsit_empty_id)
         fabAddTask = findViewById(R.id.remainder_fab_id)
         fabAddTask.setOnClickListener(this)
-
+        paymentTotalText = findViewById(R.id.remainder_total_text_id)
+        progressBar = findViewById(R.id.remainder_progressbar_id)
+        progressBar.visibility = View.GONE
         remainderRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
 //                super.onScrolled(recyclerView, dx, dy)
@@ -115,11 +113,30 @@ class ReminderListActivity : AppCompatActivity(), View.OnClickListener, TaskAdap
         }
     }
 
+    private fun sumOfTotal(result : List<TaskDataTable>?, status : Boolean) {
+        if (result != null) {
+            var totalSum : Int = 0
+            for (table in result.iterator()) {
+                with(table) {
+                    totalSum += amount.toInt()
+                }
+            }
+            if (status) {
+                paymentTotalText.text = "Payed Amount of Rs. ${NumberFormat.getNumberInstance(ConfigurationCompat.getLocales(resources.configuration)[0]).format(totalSum)} /-"
+            } else {
+                paymentTotalText.text = "Payable Amount of Rs. ${NumberFormat.getNumberInstance(
+                    ConfigurationCompat.getLocales(resources.configuration)[0]).format(totalSum)} /-"
+            }
+        }
+    }
+
     /*TODO : Get Reminder Task from Database*/
     @SuppressLint("StaticFieldLeak")
     inner class GetTaskListAsync(private val status: Boolean) : AsyncTask<Void, Void, List<TaskDataTable>>() {
         override fun onPreExecute() {
             super.onPreExecute()
+            clickStatus = status
+            progressBar.visibility = View.VISIBLE
             if (status) {
                 supportActionBar?.title = "Payed List"
             } else {
@@ -138,14 +155,20 @@ class ReminderListActivity : AppCompatActivity(), View.OnClickListener, TaskAdap
                 emptyTextView.visibility = View.GONE
                 val layoutManager = LinearLayoutManager(this@ReminderListActivity, LinearLayoutManager.VERTICAL, false)
                 remainderRecyclerView.layoutManager = layoutManager
+                sumOfTotal(result, status)
                 val taskInterface: TaskAdapter.TaskInterface = this@ReminderListActivity
-                val adapter = TaskAdapter(this@ReminderListActivity, result as ArrayList<TaskDataTable>, taskInterface)
+                val adapter = TaskAdapter(
+                    this@ReminderListActivity,
+                    result as ArrayList<TaskDataTable>,
+                    taskInterface
+                )
                 remainderRecyclerView.adapter = adapter
                 adapter.notifyDataSetChanged()
             } else {
                 emptyTextView.visibility = View.VISIBLE
                 remainderRecyclerView.visibility = View.GONE
             }
+            progressBar.visibility = View.GONE
         }
     }
 
@@ -187,11 +210,15 @@ class ReminderListActivity : AppCompatActivity(), View.OnClickListener, TaskAdap
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
             R.id.task_list_payable_id -> {
-                GetTaskListAsync(false).execute()
+                if (clickStatus) {
+                    GetTaskListAsync(false).execute()
+                }
             }
 
             R.id.task_list_payed_id -> {
-                GetTaskListAsync(true).execute()
+                if (!clickStatus) {
+                    GetTaskListAsync(true).execute()
+                }
             }
         }
         return super.onOptionsItemSelected(item)

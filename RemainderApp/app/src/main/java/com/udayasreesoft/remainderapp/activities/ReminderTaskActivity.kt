@@ -1,4 +1,4 @@
-package com.udayasreesoft.remainderapp
+package com.udayasreesoft.remainderapp.activities
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -8,9 +8,9 @@ import android.graphics.Typeface
 import android.os.AsyncTask
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.*
+import com.udayasreesoft.remainderapp.R
 import com.udayasreesoft.remainderapp.roomdatabase.CompanyNamesTable
 import com.udayasreesoft.remainderapp.roomdatabase.TaskDataTable
 import com.udayasreesoft.remainderapp.roomdatabase.TaskRepository

@@ -10,7 +10,7 @@
         android:padding="30dp"
         android:orientation="vertical"
         android:background="@android:color/white"
-        tools:context=".ReminderTaskActivity">
+        tools:context=".activities.ReminderTaskActivity">
         <TextView
                 android:id="@+id/remainder_task_title_id"
                 android:text="@string/reminding_task"

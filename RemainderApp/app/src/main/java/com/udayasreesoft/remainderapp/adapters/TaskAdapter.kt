@@ -1,18 +1,18 @@
-package com.udayasreesoft.remainderapp
+package com.udayasreesoft.remainderapp.adapters
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Color
 import android.graphics.Typeface
-import android.support.annotation.ColorInt
+import android.support.v4.os.ConfigurationCompat
 import android.support.v7.widget.RecyclerView
 import android.view.*
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
+import com.udayasreesoft.remainderapp.R
 import com.udayasreesoft.remainderapp.roomdatabase.TaskDataTable
-import com.udayasreesoft.remainderapp.utils.AppUtils
 import com.udayasreesoft.remainderapp.utils.ConstantUtils
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -87,7 +87,8 @@ class TaskAdapter(
 
             holder.dateTV.text = simpleDateFormat.format(Date(date.toLong()))
             holder.chequeTV.text = chequeNo
-            holder.amountTV.text = "Rs.$amount /- "
+            holder.amountTV.text = "Rs.${NumberFormat.getNumberInstance(
+                ConfigurationCompat.getLocales(context.resources.configuration)[0]).format(amount.toInt())} /-"
 
             holder.menuBtn.setOnClickListener { view ->
                 when (view?.id) {
