@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "784434043224",
+    "firebase_url": "https://my-business-analysis.firebaseio.com",
+    "project_id": "my-business-analysis",
+    "storage_bucket": "my-business-analysis.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:784434043224:android:efe2711192926d506eed2d",
+        "android_client_info": {
+          "package_name": "com.udayasreesoft.mybusinessanalysis"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "784434043224-l9q5u0d04uir73rdj3224h6ucunnro0p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.udayasreesoft.mybusinessanalysis",
+            "certificate_hash": "ddc3a423ad2eaefbdaf63c76b3195f904b0d2528"
+          }
+        },
+        {
+          "client_id": "784434043224-klju2hoob4je06cepvn2soef6hhh4eem.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCDMv7bIvuwkRh_mheYbH8GG3cXYIlvd4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "784434043224-klju2hoob4je06cepvn2soef6hhh4eem.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

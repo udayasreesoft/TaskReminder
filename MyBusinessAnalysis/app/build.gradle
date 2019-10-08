@@ -1,0 +1,49 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion 28
+    buildToolsVersion "29.0.2"
+    defaultConfig {
+        applicationId "com.udayasreesoft.mybusinessanalysis"
+        minSdkVersion project.ext.minSdkVersion
+        targetSdkVersion project.ext.targetSdkVersion
+        versionCode project.ext.versionCode
+        versionName project.ext.versionName
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            debuggable true
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    implementation "com.android.support:appcompat-v7:$appsupportversion"
+    implementation "com.android.support:support-v4:$appsupportversion"
+    testImplementation "junit:junit:$junitversion"
+    androidTestImplementation "com.android.support.test:runner:$runnerversion"
+    androidTestImplementation "com.android.support.test.espresso:espresso-core:$espressoversion"
+
+    implementation "com.android.support:design:$appsupportversion"
+    implementation "com.android.support:cardview-v7:$appsupportversion"
+    implementation "com.android.support:recyclerview-v7:$appsupportversion"
+
+    implementation "com.google.firebase:firebase-database:$firebasedatabase"
+
+    implementation "com.nostra13.universalimageloader:universal-image-loader:$uilversion"
+
+    implementation "android.arch.persistence.room:runtime:$roompersistanceversion"
+    annotationProcessor "android.arch.persistence.room:compiler:$roompersistanceversion"
+}
+apply plugin: 'com.google.gms.google-services'

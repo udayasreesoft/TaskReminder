@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">My Business Analysis</string>
+    <string name="company_name">Company Name</string>
+    <string name="amount">Amount</string>
+    <string name="add_task">Add Task</string>
+    <string name="cheque_number">Cheque Number</string>
+
+    <string name="notifications_admin_channel_name" translatable="false">Global channel</string>
+    <string name="notifications_admin_channel_description" translatable="false">Notifications sent from the app admin
+    </string>
+    <string name="select_company">Select Company Name</string>
+    <string name="data_is_empty">Data is Empty</string>
+    <string name="select_date">Select Date</string>
+    <string name="reminding_task">Reminding Task</string>
+    <string name="login_in">Sign In</string>
+    <string name="user_name">User Name</string>
+    <string name="mobile_number">Mobile Number</string>
+    <string name="confirmation_code">Confirmation Code</string>
+    <string name="paid">Paid</string>
+    <string name="modify">Modify</string>
+    <string name="delete">Delete</string>
+    <string name="home">Home</string>
+    <string name="payable_paid_amount">Payable/Paid Amount</string>
+    <string name="today_business">Today Business</string>
+    <string name="purchase">Purchase</string>
+    <string name="clients">Clients</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="available_stock">Available Stock</string>
+</resources>

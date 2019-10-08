@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/menu_drawable_home"
+            android:icon="@drawable/ic_home_menu_36"
+            android:title="@string/home" />
+    </group>
+
+    <item android:title="@string/app_name">
+        <menu>
+            <item
+                android:id="@+id/menu_drawable_amount"
+                android:icon="@drawable/ic_currency_36"
+                android:title="@string/payable_paid_amount" />
+
+            <item
+                android:id="@+id/menu_drawable_todaybusiness"
+                android:icon="@drawable/ic_business_36"
+                android:title="@string/today_business" />
+
+            <item
+                android:id="@+id/menu_drawable_purchase"
+                android:icon="@drawable/ic_purchase_36"
+                android:title="@string/purchase" />
+
+            <item
+                android:id="@+id/menu_drawable_availablestock"
+                android:icon="@drawable/ic_availablestock_36"
+                android:title="@string/available_stock" />
+        </menu>
+    </item>
+
+    <item android:title="@string/clients">
+        <menu>
+            <item
+                android:id="@+id/menu_drawable_client"
+                android:icon="@drawable/ic_clients_36"
+                android:title="@string/clients" />
+        </menu>
+    </item>
+</menu>
