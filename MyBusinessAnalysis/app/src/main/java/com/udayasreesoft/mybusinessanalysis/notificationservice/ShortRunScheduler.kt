@@ -8,12 +8,12 @@ import android.support.annotation.RequiresApi
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class ShortRunScheduler : JobService() {
-    override fun onStopJob(p0: JobParameters?): Boolean {
+    override fun onStartJob(p0: JobParameters?): Boolean {
         startService(Intent(this, ShortRunService::class.java))
         return true
     }
 
-    override fun onStartJob(p0: JobParameters?): Boolean {
+    override fun onStopJob(p0: JobParameters?): Boolean {
         return true
     }
 }

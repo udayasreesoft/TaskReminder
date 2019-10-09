@@ -89,6 +89,10 @@ class PreferenceSharedUtils(val context: Context) {
         return sharedPreferences.getString(user_mobile_number, "NA")
     }
 
+    fun clearAlarmIDPreference() {
+        setAlarmIds("[]")
+    }
+
     fun clearPreference() {
         sharedPreferences.edit()?.clear()?.apply()
     }

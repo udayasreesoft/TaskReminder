@@ -9,5 +9,7 @@ class ConstantUtils {
         @JvmField val HOUR = 12
         @JvmField val MINUTE = 10
         @JvmField val SECOND = 0
+
+        @JvmField val USERS = "Users"
     }
 }

@@ -42,7 +42,7 @@ class TimerAlarmManager(val context: Context) {
 
             if (requestType) {
                 jsonArray.put(ids)
-                preferenceSharedUtils.clearPreference()
+                preferenceSharedUtils.clearAlarmIDPreference()
                 preferenceSharedUtils.setAlarmIds(jsonArray.toString())
             }
 
@@ -50,7 +50,7 @@ class TimerAlarmManager(val context: Context) {
                 requestIds.add(jsonArray.getInt(i))
             }
             if (!requestType){
-                preferenceSharedUtils.clearPreference()
+                preferenceSharedUtils.clearAlarmIDPreference()
             }
         } catch (e: Exception) {
             e.printStackTrace()
