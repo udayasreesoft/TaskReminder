@@ -10,6 +10,7 @@ import java.util.*
 
 class AppUtils {
     companion object {
+        @JvmField var isAdminStatus = false
         @JvmField var isServiceRun = true
 
         @JvmField var SCREEN_WIDTH = 0

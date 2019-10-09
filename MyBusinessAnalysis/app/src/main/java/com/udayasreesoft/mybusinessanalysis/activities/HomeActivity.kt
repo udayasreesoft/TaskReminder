@@ -19,6 +19,7 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration
 import com.nostra13.universalimageloader.core.assist.ImageScaleType
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer
 import com.udayasreesoft.mybusinessanalysis.R
+import com.udayasreesoft.mybusinessanalysis.utils.AppUtils
 import com.udayasreesoft.mybusinessanalysis.utils.PreferenceSharedUtils
 
 class HomeActivity : AppCompatActivity() {
@@ -43,7 +44,7 @@ class HomeActivity : AppCompatActivity() {
 
     private fun initView() {
         preferenceSharedUtils = PreferenceSharedUtils(this).getInstance()
-
+        AppUtils.isAdminStatus = preferenceSharedUtils.getAdminStatus()
         drawerLayout = findViewById(R.id.home_nav_drawer_id)
         navigationView = findViewById(R.id.home_nav_view_id)
         navAppBar = findViewById(R.id.nav_appbar_home_id)

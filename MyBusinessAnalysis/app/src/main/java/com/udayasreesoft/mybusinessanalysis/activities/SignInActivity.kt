@@ -123,6 +123,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                                 preferenceSharedUtils.setSignInCode(verificationCode)
                                 preferenceSharedUtils.setUserConfirmationStatus(codeVerified)
                                 preferenceSharedUtils.setUserFireBaseChildId(userId)
+                                preferenceSharedUtils.setAdminStatus(admin)
 
                                 loginUserName.setText("")
                                 loginMobile.setText("")
@@ -234,7 +235,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                                 userMobile,
                                 userOutlet,
                                 verificationCode,
-                                false
+                                false, false
                             )
                         readFromFireBase(userSignInModel)
                     } else {

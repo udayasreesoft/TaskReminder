@@ -2,18 +2,19 @@ package com.udayasreesoft.mybusinessanalysis.firebasedatabase;
 
 public class UserSignInModel {
     private String userId, userName, userMobile, userOutlet, verificationCode;
-    private boolean isCodeVerified;
+    private boolean isCodeVerified, isAdmin;
 
     public UserSignInModel() {
     }
 
-    public UserSignInModel(String userId, String userName, String userMobile, String userOutlet, String verificationCode, boolean isCodeVerified) {
+    public UserSignInModel(String userId, String userName, String userMobile, String userOutlet, String verificationCode, boolean isCodeVerified, boolean isAdmin) {
         this.userId = userId;
         this.userName = userName;
         this.userMobile = userMobile;
         this.userOutlet = userOutlet;
         this.verificationCode = verificationCode;
         this.isCodeVerified = isCodeVerified;
+        this.isAdmin = isAdmin;
     }
 
     public String getUserId() {
@@ -62,5 +63,13 @@ public class UserSignInModel {
 
     public void setCodeVerified(boolean codeVerified) {
         isCodeVerified = codeVerified;
+    }
+
+    public boolean getAdmin() {
+        return isAdmin;
+    }
+
+    public void setAdmin(boolean admin) {
+        isAdmin = admin;
     }
 }

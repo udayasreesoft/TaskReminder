@@ -16,6 +16,7 @@ class PreferenceSharedUtils(val context: Context) {
     private val user_mobile_number = "USER_MOBILE_NUMBER"
     private val user_signin_code_firebase = "FIRE_BASE_CODE"
     private val user_confirmation_status = "USER_CONFIRMATION_STATUS"
+    private val user_admin_status = "USER_ADMIN_STATUS"
 
     @Synchronized
     fun getInstance() : PreferenceSharedUtils{
@@ -87,6 +88,14 @@ class PreferenceSharedUtils(val context: Context) {
 
     fun getMobileNumber() : String? {
         return sharedPreferences.getString(user_mobile_number, "NA")
+    }
+
+    fun setAdminStatus(isAdmin : Boolean) {
+        sharedPreferences.edit()?.putBoolean(user_admin_status, isAdmin)?.apply()
+    }
+
+    fun getAdminStatus() : Boolean {
+        return sharedPreferences.getBoolean(user_admin_status, false)
     }
 
     fun clearAlarmIDPreference() {

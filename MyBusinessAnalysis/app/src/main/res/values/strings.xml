@@ -24,8 +24,8 @@
     <string name="today_business">Today Business</string>
     <string name="purchase">Purchase</string>
     <string name="clients">Clients</string>
+    <string name="available_stock">Available Stock</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="available_stock">Available Stock</string>
 </resources>

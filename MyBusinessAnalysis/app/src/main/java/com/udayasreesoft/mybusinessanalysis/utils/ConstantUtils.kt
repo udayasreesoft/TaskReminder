@@ -6,8 +6,8 @@ class ConstantUtils {
         @JvmField val REMINDER_LIST_CODE = 1
 
         @JvmField val DATE_FORMAT = "MMMM dd, yyyy (EEEE)"
-        @JvmField val HOUR = 12
-        @JvmField val MINUTE = 10
+        @JvmField val HOUR = 8
+        @JvmField val MINUTE = 0
         @JvmField val SECOND = 0
 
         @JvmField val USERS = "Users"
