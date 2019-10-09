@@ -39,8 +39,8 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var preferenceSharedUtils: PreferenceSharedUtils
     private lateinit var customProgressDialog : CustomProgressDialog
 
-    private val outletName = "Kushika Kids Collections"
-    private val outletCode = "KKC"
+    private var outletName = ""
+    private var outletCode = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -164,6 +164,26 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private fun setupOutletTextView(outletNames : List<String>?) {
+        if (outletNames != null) {
+            val arrayAdapter = ArrayAdapter(this, android.R.layout.select_dialog_item, outletNames)
+            loginOutletName.threshold = 1
+            arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            loginOutletName.setAdapter(arrayAdapter)
+
+            loginOutletName.onItemClickListener =
+                AdapterView.OnItemClickListener { _, _, position, _ ->
+                    outletName = arrayAdapter.getItem(position)!!
+                    if (outletName.isNotEmpty() && outletName.isNotBlank()) {
+                        val split : List<String> = outletName.split(" ")
+                        for (s in split) {
+                            outletCode += s[0]
+                        }
+                    }
+                }
+        }
+    }
+
     private fun confirmationCodeAlert() {
         if (!preferenceSharedUtils.getUserConfirmationStatus()) {
             val builder = AlertDialog.Builder(this@SignInActivity)
@@ -221,11 +241,10 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                 if (AppUtils.networkConnectivityCheck(this)) {
                     val userName = loginUserName.text.toString()
                     val userMobile = loginMobile.text.toString()
-                    val userOutlet = loginOutletName.text.toString()
                     val userId = AppUtils.fireBaseChildId(outletCode)
                     val verificationCode = AppUtils.randomNumbers().toString()
-                    if (userName.isNotEmpty() && userMobile.isNotEmpty() && userMobile.length == 10 && userOutlet.isNotEmpty()
-                        && userId.isNotEmpty() && verificationCode.isNotEmpty()
+                    if (userName.isNotEmpty() && userMobile.isNotEmpty() && userMobile.length == 10
+                        && outletName.isNotEmpty() && outletCode.isNotEmpty() && userId.isNotEmpty() && verificationCode.isNotEmpty()
                     ) {
                         customProgressDialog.showProgressDialog()
                         val userSignInModel =
@@ -233,7 +252,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                                 userId,
                                 userName,
                                 userMobile,
-                                userOutlet,
+                                outletName,
                                 verificationCode,
                                 false, false
                             )
@@ -245,7 +264,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                         if (userMobile.isEmpty() || userMobile.length < 10) {
                             loginMobile.error = "Enter Valid Number"
                         }
-                        if (userOutlet.isEmpty()) {
+                        if (outletName.isEmpty()) {
                             loginOutletName.error = "Select valid Outlet"
                         }
                     }
