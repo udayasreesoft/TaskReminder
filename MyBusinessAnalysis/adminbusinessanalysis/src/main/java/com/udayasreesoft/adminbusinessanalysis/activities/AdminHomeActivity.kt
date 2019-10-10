@@ -1,4 +1,4 @@
-package com.udayasreesoft.adminbusinessanalysis.acitvities
+package com.udayasreesoft.adminbusinessanalysis.activities
 
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
