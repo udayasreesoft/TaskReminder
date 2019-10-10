@@ -7,20 +7,17 @@ import android.support.design.widget.NavigationView
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.widget.Toolbar
-import android.view.MenuItem
-import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
-import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator
 import com.nostra13.universalimageloader.core.DisplayImageOptions
 import com.nostra13.universalimageloader.core.ImageLoader
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration
 import com.nostra13.universalimageloader.core.assist.ImageScaleType
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer
+import com.udayasreesoft.businesslibrary.utils.AppUtils
+import com.udayasreesoft.businesslibrary.utils.PreferenceSharedUtils
 import com.udayasreesoft.mybusinessanalysis.R
-import com.udayasreesoft.mybusinessanalysis.utils.AppUtils
-import com.udayasreesoft.mybusinessanalysis.utils.PreferenceSharedUtils
 
 class HomeActivity : AppCompatActivity() {
 

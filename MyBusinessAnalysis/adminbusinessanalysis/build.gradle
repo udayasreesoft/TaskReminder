@@ -41,6 +41,10 @@ dependencies {
     implementation "com.android.support:cardview-v7:$appsupportversion"
     implementation "com.android.support:recyclerview-v7:$appsupportversion"
 
+    implementation "com.squareup.retrofit2:retrofit:$retrofit2version"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit2version"
+
     implementation "com.google.firebase:firebase-database:$firebasedatabase"
+    implementation project(path: ':businesslibrary')
 }
 apply plugin: 'com.google.gms.google-services'

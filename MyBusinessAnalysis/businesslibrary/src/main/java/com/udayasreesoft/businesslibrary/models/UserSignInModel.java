@@ -1,4 +1,4 @@
-package com.udayasreesoft.mybusinessanalysis.firebasedatabase;
+package com.udayasreesoft.businesslibrary.models;
 
 public class UserSignInModel {
     private String userId, userName, userMobile, userOutlet, verificationCode;

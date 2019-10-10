@@ -1,6 +1,5 @@
 package com.udayasreesoft.mybusinessanalysis.activities
 
-import android.content.Intent
 import android.graphics.Color
 import android.graphics.Point
 import android.graphics.Typeface
@@ -20,13 +19,13 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.udayasreesoft.businesslibrary.models.BusinessOutletModel
 import com.udayasreesoft.mybusinessanalysis.R
-import com.udayasreesoft.mybusinessanalysis.firebasedatabase.FireBaseAccessUtils
-import com.udayasreesoft.mybusinessanalysis.firebasedatabase.UserSignInModel
-import com.udayasreesoft.mybusinessanalysis.utils.AppUtils
-import com.udayasreesoft.mybusinessanalysis.utils.ConstantUtils
-import com.udayasreesoft.mybusinessanalysis.utils.CustomProgressDialog
-import com.udayasreesoft.mybusinessanalysis.utils.PreferenceSharedUtils
+import com.udayasreesoft.businesslibrary.models.UserSignInModel
+import com.udayasreesoft.businesslibrary.utils.AppUtils
+import com.udayasreesoft.businesslibrary.utils.ConstantUtils
+import com.udayasreesoft.businesslibrary.utils.CustomProgressDialog
+import com.udayasreesoft.businesslibrary.utils.PreferenceSharedUtils
 
 class SignInActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -96,6 +95,8 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
         customProgressDialog = CustomProgressDialog(this).getInstance()
         customProgressDialog.setProgressMessage("Connecting to Server. Please wait...")
         customProgressDialog.setUpProgressDialog()
+
+        readOutletToFireBase()
     }
 
     private fun readFromFireBase(userSignInModel: UserSignInModel) {
@@ -164,8 +165,36 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private fun readOutletToFireBase() {
+        if (AppUtils.networkConnectivityCheck(this)) {
+            customProgressDialog.showProgressDialog()
+            val firebaseReference = FirebaseDatabase.getInstance()
+                .getReference(ConstantUtils.DETAILS)
+                .child(ConstantUtils.OUTLET)
+
+            firebaseReference.addValueEventListener(object : ValueEventListener {
+                override fun onCancelled(error: DatabaseError) {
+                    customProgressDialog.dismissProgressDialog()
+                }
+
+                override fun onDataChange(dataSnapShot: DataSnapshot) {
+                    val outletList = ArrayList<BusinessOutletModel>()
+                    for(ds in dataSnapShot.children) {
+                        outletList.add(ds.getValue(BusinessOutletModel::class.java)!!)
+                    }
+                    val outletName = ArrayList<String>()
+                    for (element in outletList) {
+                        outletName.add(element.businessOutlet)
+                    }
+                    setupOutletTextView(outletName)
+                    customProgressDialog.dismissProgressDialog()
+                }
+            })
+        }
+    }
+
     private fun setupOutletTextView(outletNames : List<String>?) {
-        if (outletNames != null) {
+        if (outletNames != null && outletNames.isNotEmpty()) {
             val arrayAdapter = ArrayAdapter(this, android.R.layout.select_dialog_item, outletNames)
             loginOutletName.threshold = 1
             arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -219,9 +248,15 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
             builder.setPositiveButton(
                 "Verify"
             ) { dialog, _ ->
-                dialog?.dismiss()
                 if (preferenceSharedUtils.getSignInCode() == codeText.text.toString()) {
                     preferenceSharedUtils.setUserSignInStatus(true)
+                    dialog?.dismiss()
+                    startActivity(
+                        android.content.Intent(
+                            this@SignInActivity,
+                            HomeActivity::class.java
+                        )
+                    )
                 }
             }
             builder.setNeutralButton("Exit") { dialog, _ ->

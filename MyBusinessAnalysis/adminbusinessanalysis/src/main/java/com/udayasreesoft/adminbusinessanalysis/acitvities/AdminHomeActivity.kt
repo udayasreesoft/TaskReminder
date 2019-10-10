@@ -1,5 +1,6 @@
-package com.udayasreesoft.adminbusinessanalysis
+package com.udayasreesoft.adminbusinessanalysis.acitvities
 
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.AppBarLayout
@@ -8,6 +9,8 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.widget.Toolbar
 import android.widget.FrameLayout
+import com.udayasreesoft.adminbusinessanalysis.R
+import com.udayasreesoft.adminbusinessanalysis.fragments.UserFragment
 
 class AdminHomeActivity : AppCompatActivity() {
 
@@ -39,7 +42,9 @@ class AdminHomeActivity : AppCompatActivity() {
 
     private fun setupNavigationDrawer() {
         val actionBarDrawerToggle = ActionBarDrawerToggle(this, drawerLayout, navToolbar,
-            R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+            R.string.navigation_drawer_open,
+            R.string.navigation_drawer_close
+        )
 
         drawerLayout.addDrawerListener(actionBarDrawerToggle)
         actionBarDrawerToggle.syncState()
@@ -49,10 +54,26 @@ class AdminHomeActivity : AppCompatActivity() {
 
                 R.id.menu_drawable_home_admin -> {
 
+                    supportFragmentManager
+                        .beginTransaction()
+                        .replace(
+                            R.id.admin_nav_appbar_container_id,
+                            UserFragment()
+                        )
+                        .addToBackStack(null)
+                        .commit()
                 }
             }
             drawerLayout.closeDrawers()
             true
         }
+    }
+
+    override fun onBackPressed() {
+        val intent = Intent(Intent.ACTION_MAIN)
+        intent.addCategory(Intent.CATEGORY_HOME)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        //clearBackStack()
+        startActivity(intent)
     }
 }

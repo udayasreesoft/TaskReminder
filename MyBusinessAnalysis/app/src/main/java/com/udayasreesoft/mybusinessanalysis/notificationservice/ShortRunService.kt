@@ -3,7 +3,7 @@ package com.udayasreesoft.mybusinessanalysis.notificationservice
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import com.udayasreesoft.mybusinessanalysis.utils.AppUtils
+import com.udayasreesoft.businesslibrary.utils.AppUtils
 
 class ShortRunService : Service() {
     override fun onBind(p0: Intent?): IBinder? { return null}

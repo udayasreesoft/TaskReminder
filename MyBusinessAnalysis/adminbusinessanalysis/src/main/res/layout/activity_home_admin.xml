@@ -5,7 +5,7 @@
     android:id="@+id/admin_home_drawer_id"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".AdminHomeActivity">
+    tools:context=".acitvities.AdminHomeActivity">
 
     <include
         layout="@layout/nav_appbar_home_admin"

@@ -1,4 +1,4 @@
-package com.udayasreesoft.mybusinessanalysis.utils
+package com.udayasreesoft.businesslibrary.utils
 
 import android.app.AlertDialog
 import android.content.Context
@@ -53,7 +53,7 @@ class AppUtils {
             } catch (e : Exception) {e.printStackTrace()}
         }
 
-        internal fun networkConnectivityCheck(context: Context): Boolean {
+        fun networkConnectivityCheck(context: Context): Boolean {
             val connectivityManager: ConnectivityManager? =
                 context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             if (connectivityManager != null) {

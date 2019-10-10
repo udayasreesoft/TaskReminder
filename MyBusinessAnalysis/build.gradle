@@ -42,4 +42,5 @@ ext {
     roompersistanceversion = "1.1.1"
     uilversion = "1.9.5"
     firebasedatabase = "16.0.4"
+    retrofit2version = "2.3.0"
 }

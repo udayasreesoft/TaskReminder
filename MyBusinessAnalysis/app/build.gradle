@@ -45,5 +45,8 @@ dependencies {
 
     implementation "android.arch.persistence.room:runtime:$roompersistanceversion"
     annotationProcessor "android.arch.persistence.room:compiler:$roompersistanceversion"
+    implementation project(path: ':businesslibrary')
+
+
 }
 apply plugin: 'com.google.gms.google-services'

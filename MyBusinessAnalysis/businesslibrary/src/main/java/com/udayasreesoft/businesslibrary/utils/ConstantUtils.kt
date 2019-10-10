@@ -1,4 +1,4 @@
-package com.udayasreesoft.mybusinessanalysis.utils
+package com.udayasreesoft.businesslibrary.utils
 
 class ConstantUtils {
     companion object {
@@ -11,5 +11,8 @@ class ConstantUtils {
         @JvmField val SECOND = 0
 
         @JvmField val USERS = "Users"
+        @JvmField val DETAILS = "Details"
+        @JvmField val OUTLET = "Outlets"
+        @JvmField val ADMIN = "Admins"
     }
 }

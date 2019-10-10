@@ -13,7 +13,7 @@ import android.os.Handler
 import com.udayasreesoft.mybusinessanalysis.notificationservice.ShortRunScheduler
 import com.udayasreesoft.mybusinessanalysis.notificationservice.ShortRunService
 import com.udayasreesoft.mybusinessanalysis.notificationservice.TimerAlarmManager
-import com.udayasreesoft.mybusinessanalysis.utils.AppUtils
+import com.udayasreesoft.businesslibrary.utils.AppUtils
 
 class ApplicationLifecycleCallback : Application.ActivityLifecycleCallbacks {
     private var numStarted: Int = 0
