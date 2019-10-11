@@ -17,15 +17,15 @@ class CustomProgressDialog(val context: Context) {
         return customProgressDialog as CustomProgressDialog
     }
 
-    fun setProgressTitle(title : String) {
+    fun setTitle(title : String) {
         progressTitle = title
     }
 
-    fun setProgressMessage(message : String) {
+    fun setMessage(message : String) {
         progressMessage = message
     }
 
-    fun setUpProgressDialog() {
+    fun build() {
         progressDialog = ProgressDialog(context)
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER)
         progressDialog.setTitle(progressTitle)
@@ -34,13 +34,13 @@ class CustomProgressDialog(val context: Context) {
         progressDialog.setCancelable(false)
     }
 
-    fun showProgressDialog() {
+    fun show() {
         if (progressDialog != null && !progressDialog.isShowing) {
             progressDialog.show()
         }
     }
 
-    fun dismissProgressDialog() {
+    fun dismiss() {
         if (progressDialog != null && progressDialog.isShowing) {
             progressDialog.dismiss()
         }

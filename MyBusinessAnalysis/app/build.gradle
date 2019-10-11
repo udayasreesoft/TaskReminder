@@ -42,6 +42,8 @@ dependencies {
     implementation "com.google.firebase:firebase-database:$firebasedatabase"
 
     implementation "com.nostra13.universalimageloader:universal-image-loader:$uilversion"
+    implementation "com.squareup.retrofit2:retrofit:$retrofit2version"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit2version"
 
     implementation "android.arch.persistence.room:runtime:$roompersistanceversion"
     annotationProcessor "android.arch.persistence.room:compiler:$roompersistanceversion"

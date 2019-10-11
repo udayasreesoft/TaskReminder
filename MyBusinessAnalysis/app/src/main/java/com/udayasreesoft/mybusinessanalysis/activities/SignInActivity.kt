@@ -28,7 +28,6 @@ import com.udayasreesoft.businesslibrary.utils.CustomProgressDialog
 import com.udayasreesoft.businesslibrary.utils.PreferenceSharedUtils
 
 class SignInActivity : AppCompatActivity(), View.OnClickListener {
-
     private lateinit var loginLayout: LinearLayout
     private lateinit var loginUserName: EditText
     private lateinit var loginMobile: EditText
@@ -93,8 +92,8 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
         loginBtn.setOnClickListener(this)
 
         customProgressDialog = CustomProgressDialog(this).getInstance()
-        customProgressDialog.setProgressMessage("Connecting to Server. Please wait...")
-        customProgressDialog.setUpProgressDialog()
+        customProgressDialog.setMessage("Connecting to Server. Please wait...")
+        customProgressDialog.build()
 
         readOutletToFireBase()
     }
@@ -108,7 +107,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
 
             fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onCancelled(error: DatabaseError) {
-                    customProgressDialog.dismissProgressDialog()
+                    customProgressDialog.dismiss()
                 }
 
                 override fun onDataChange(snapShot: DataSnapshot) {
@@ -129,7 +128,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                                 loginUserName.setText("")
                                 loginMobile.setText("")
                                 loginOutletName.setText("")
-                                customProgressDialog.dismissProgressDialog()
+                                customProgressDialog.dismiss()
                                 confirmationCodeAlert()
                             }
                         }
@@ -152,7 +151,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                         if (error == null) {
                             readFromFireBase(userSignInModel)
                         } else {
-                            customProgressDialog.dismissProgressDialog()
+                            customProgressDialog.dismiss()
                             Toast.makeText(
                                 this@SignInActivity,
                                 "Fail to create user. Please try again",
@@ -167,14 +166,14 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun readOutletToFireBase() {
         if (AppUtils.networkConnectivityCheck(this)) {
-            customProgressDialog.showProgressDialog()
+            customProgressDialog.show()
             val firebaseReference = FirebaseDatabase.getInstance()
                 .getReference(ConstantUtils.DETAILS)
                 .child(ConstantUtils.OUTLET)
 
             firebaseReference.addValueEventListener(object : ValueEventListener {
                 override fun onCancelled(error: DatabaseError) {
-                    customProgressDialog.dismissProgressDialog()
+                    customProgressDialog.dismiss()
                 }
 
                 override fun onDataChange(dataSnapShot: DataSnapshot) {
@@ -187,7 +186,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                         outletName.add(element.businessOutlet)
                     }
                     setupOutletTextView(outletName)
-                    customProgressDialog.dismissProgressDialog()
+                    customProgressDialog.dismiss()
                 }
             })
         }
@@ -248,15 +247,17 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
             builder.setPositiveButton(
                 "Verify"
             ) { dialog, _ ->
+                dialog?.dismiss()
                 if (preferenceSharedUtils.getSignInCode() == codeText.text.toString()) {
                     preferenceSharedUtils.setUserSignInStatus(true)
-                    dialog?.dismiss()
                     startActivity(
                         android.content.Intent(
                             this@SignInActivity,
                             HomeActivity::class.java
                         )
                     )
+                } else {
+                    Toast.makeText(this, "Invalid code", Toast.LENGTH_SHORT).show()
                 }
             }
             builder.setNeutralButton("Exit") { dialog, _ ->
@@ -281,7 +282,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                     if (userName.isNotEmpty() && userMobile.isNotEmpty() && userMobile.length == 10
                         && outletName.isNotEmpty() && outletCode.isNotEmpty() && userId.isNotEmpty() && verificationCode.isNotEmpty()
                     ) {
-                        customProgressDialog.showProgressDialog()
+                        customProgressDialog.show()
                         val userSignInModel =
                             UserSignInModel(
                                 userId,

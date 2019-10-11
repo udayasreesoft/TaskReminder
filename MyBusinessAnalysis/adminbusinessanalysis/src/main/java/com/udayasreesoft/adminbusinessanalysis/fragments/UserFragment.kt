@@ -3,6 +3,7 @@ package com.udayasreesoft.adminbusinessanalysis.fragments
 
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -33,7 +34,6 @@ class UserFragment : Fragment(), View.OnClickListener {
     private lateinit var userMobileText: EditText
     private lateinit var userOutletText: AutoCompleteTextView
     private lateinit var userAddressText: EditText
-    private lateinit var userPinCodeText: EditText
     private lateinit var userPinCodeBtn: ImageView
     private lateinit var userAdminCodeText: EditText
     private lateinit var userAddBtn: Button
@@ -61,8 +61,7 @@ class UserFragment : Fragment(), View.OnClickListener {
         userNameText = view.findViewById(R.id.frag_user_name_id)
         userMobileText = view.findViewById(R.id.frag_user_mobile_id)
         userOutletText = view.findViewById(R.id.frag_user_outlet_name_id)
-        userAddressText = view.findViewById(R.id.frag_user_address_id)
-        userPinCodeText = view.findViewById(R.id.frag_user_zipcode_id)
+        userAddressText = view.findViewById(R.id.frag_user_zipcode_id)
         userPinCodeBtn = view.findViewById(R.id.frag_search_zipcode_id)
         userAdminCodeText = view.findViewById(R.id.frag_user_admin_code_id)
         userAddBtn = view.findViewById(R.id.frag_user_add_btn)
@@ -71,22 +70,22 @@ class UserFragment : Fragment(), View.OnClickListener {
         userPinCodeBtn.setOnClickListener(this)
 
         customProgressDialog = CustomProgressDialog(context!!).getInstance()
-        customProgressDialog.setProgressMessage("Connecting to Server. Please wait...")
-        customProgressDialog.setUpProgressDialog()
+        customProgressDialog.setMessage("Connecting to Server. Please wait...")
+        customProgressDialog.build()
         readOutletToFireBase()
 
     }
 
     private fun readOutletToFireBase() {
         if (AppUtils.networkConnectivityCheck(context!!)) {
-            customProgressDialog.showProgressDialog()
+            customProgressDialog.show()
             val firebaseReference = FirebaseDatabase.getInstance()
                 .getReference(ConstantUtils.DETAILS)
                 .child(ConstantUtils.OUTLET)
 
             firebaseReference.addValueEventListener(object : ValueEventListener {
                 override fun onCancelled(error: DatabaseError) {
-                    customProgressDialog.dismissProgressDialog()
+                    customProgressDialog.dismiss()
                 }
 
                 override fun onDataChange(dataSnapShot: DataSnapshot) {
@@ -98,7 +97,7 @@ class UserFragment : Fragment(), View.OnClickListener {
                         outletNameList.add(element.businessOutlet)
                     }
                     setupOutletTextView(outletNameList)
-                    customProgressDialog.dismissProgressDialog()
+                    customProgressDialog.dismiss()
                 }
             })
         }
@@ -174,9 +173,8 @@ class UserFragment : Fragment(), View.OnClickListener {
                             userMobileText.setText("")
                             userOutletText.setText("")
                             userAddressText.setText("")
-                            userPinCodeText.setText("")
                             userAdminCodeText.setText("")
-                            customProgressDialog.dismissProgressDialog()
+                            customProgressDialog.dismiss()
                             Toast.makeText(
                                 context,
                                 "Successfully Created Admin",
@@ -184,7 +182,7 @@ class UserFragment : Fragment(), View.OnClickListener {
                             )
                                 .show()
                         } else {
-                            customProgressDialog.dismissProgressDialog()
+                            customProgressDialog.dismiss()
                             Toast.makeText(
                                 context,
                                 "Fail to create user. Please try again",
@@ -198,12 +196,13 @@ class UserFragment : Fragment(), View.OnClickListener {
     }
 
     private fun getZipCodeAddress(zipcode: String) {
-        if (zipcode.isNotEmpty() || zipcode.isNotBlank()) {
+        if (AppUtils.networkConnectivityCheck(context!!) && zipcode.isNotEmpty() || zipcode.isNotBlank()) {
+            customProgressDialog.show()
             val apiInterface = ApiClient.getZipCodeApiClient().create(ApiInterface::class.java)
             val call = apiInterface.getZipCodeAddress(zipcode)
             call.enqueue(object : Callback<ZipcodeModel> {
                 override fun onFailure(call: Call<ZipcodeModel>, t: Throwable) {
-
+                    addressFunc()
                 }
 
                 override fun onResponse(
@@ -212,16 +211,23 @@ class UserFragment : Fragment(), View.OnClickListener {
                 ) {
                     if (response.isSuccessful && response.body() != null) {
                         val zipCodeModel: ZipcodeModel? = response.body()
-                        if (zipCodeModel != null) {
+                        if (zipCodeModel != null && zipCodeModel.status == "Success") {
                             val postOffice: List<PostOffice> = zipCodeModel.postOffice
                             if (postOffice.isNotEmpty()) {
-                                val element = postOffice[0]
-                                val address =
-                                    "${element.name}, ${element.division}, ${element.state}, " +
-                                            "${element.country} Zipcode - $zipcode"
+                                addressFunc()
+                                val addressList = ArrayList<String>()
+                                for (element in postOffice) {
+                                    with(element) {
+                                        addressList.add("$name, $division,\n$state, $country,\npincode - $zipcode")
+                                    }
+                                }
 
-                                userAddressText.setText(address)
+                                if (addressList.isNotEmpty()) {
+                                    setupAddressTextView(addressList)
+                                }
                             }
+                        } else {
+                            addressFunc()
                         }
                     }
                 }
@@ -229,11 +235,45 @@ class UserFragment : Fragment(), View.OnClickListener {
         }
     }
 
+    private fun setupAddressTextView(addressList : List<String>?) {
+        if (addressList != null && addressList.isNotEmpty()) {
+            val arrayAdapter = ArrayAdapter(context!!, android.R.layout.simple_list_item_1, android.R.id.text1, addressList)
+            userOutletText.threshold = 0
+            arrayAdapter.setDropDownViewResource(android.R.layout.simple_list_item_1)
+            userOutletText.setAdapter(arrayAdapter)
+            userOutletText.showDropDown()
+            userOutletText.onItemClickListener =
+                AdapterView.OnItemClickListener { _, _, position, _ ->
+                    userOutletText.setText(arrayAdapter.getItem(position)!!)
+                }
+        }
+    }
+
+    private fun addressFunc() {
+        with(userAddressText) {
+            setSingleLine(false)
+//            imeOptions = EditorInfo.IME_FLAG_NO_ENTER_ACTION
+            maxLines = 5
+            isVerticalScrollBarEnabled = true
+            movementMethod = android.text.method.ScrollingMovementMethod.getInstance()
+            scrollBarStyle = android.view.View.SCROLLBARS_INSIDE_INSET
+            gravity = android.view.Gravity.TOP + android.view.Gravity.START
+            inputType = android.text.InputType.TYPE_CLASS_TEXT + android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS + android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            setText("")
+            hint = "Outlet Address"
+            isFocusable = true
+        }
+        userPinCodeBtn.visibility = View.GONE
+        customProgressDialog.dismiss()
+    }
+
     override fun onClick(v: View?) {
         when (v?.id) {
 
             R.id.frag_search_zipcode_id -> {
-                getZipCodeAddress(userPinCodeText.text.toString())
+                if (userPinCodeBtn.visibility == View.VISIBLE) {
+                    getZipCodeAddress(userAddressText.text.toString())
+                }
             }
 
             R.id.frag_user_add_btn -> {
@@ -244,18 +284,17 @@ class UserFragment : Fragment(), View.OnClickListener {
                 }
                 checkOutletName()
                 val address = userAddressText.text.toString()
-                val pinCode = userPinCodeText.text.toString()
                 val adminCode = userAdminCodeText.text.toString()
                 if (userName.isNotEmpty() && mobile.isNotEmpty() && mobile.length == 10 && outletName.isNotEmpty()
-                    && address.isNotEmpty() && pinCode.isNotEmpty() && adminCode.isNotEmpty() && adminCode.length == 6
+                    && address.isNotEmpty() && adminCode.isNotEmpty() && adminCode.length == 6
                 ) {
-                    customProgressDialog.showProgressDialog()
+                    customProgressDialog.show()
                     val userSignInModel =
                         UserSignInModel(
                             userName,
                             mobile,
                             outletName,
-                            "$outletName, \n$address \nPincode - $pinCode",
+                            "$outletName, \n$address",
                             adminCode,
                             false,
                             true
@@ -281,10 +320,6 @@ class UserFragment : Fragment(), View.OnClickListener {
 
                     if (address.isEmpty() || address.isBlank()) {
                         userAddressText.error = "Enter Address"
-                    }
-
-                    if (pinCode.isEmpty() || pinCode.isBlank()) {
-                        userPinCodeText.error = "Enter Pincode"
                     }
 
                     if (adminCode.isEmpty() && adminCode.isBlank() && adminCode.length < 6) {

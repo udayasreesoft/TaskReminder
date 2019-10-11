@@ -35,11 +35,19 @@
     </item>
 
     <item android:title="@string/clients">
-        <menu>
-            <item
-                android:id="@+id/menu_drawable_client"
-                android:icon="@drawable/ic_clients_36"
-                android:title="@string/clients" />
-        </menu>
+
+        <item android:title="@string/my_outlet_analysis">
+            <menu>
+                <item
+                    android:id="@+id/menu_outlet_setup_client"
+                    android:icon="@drawable/ic_clients_36"
+                    android:title="@string/outlet_settings" />
+
+                <item
+                    android:id="@+id/menu_drawable_client"
+                    android:icon="@drawable/ic_clients_36"
+                    android:title="@string/clients" />
+            </menu>
+        </item>
     </item>
 </menu>
