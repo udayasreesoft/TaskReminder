@@ -35,10 +35,11 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var loginBtn: Button
 
     private lateinit var preferenceSharedUtils: PreferenceSharedUtils
-    private lateinit var customProgressDialog : CustomProgressDialog
+    private lateinit var progress : CustomProgressDialog
 
     private var outletName = ""
     private var outletCode = ""
+    private var isDialogVerified = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,9 +92,9 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
 
         loginBtn.setOnClickListener(this)
 
-        customProgressDialog = CustomProgressDialog(this).getInstance()
-        customProgressDialog.setMessage("Connecting to Server. Please wait...")
-        customProgressDialog.build()
+        progress = CustomProgressDialog(this).getInstance()
+        progress.setMessage("Connecting to Server. Please wait...")
+        progress.build()
 
         readOutletToFireBase()
     }
@@ -107,7 +108,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
 
             fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onCancelled(error: DatabaseError) {
-                    customProgressDialog.dismiss()
+                    progress.dismiss()
                 }
 
                 override fun onDataChange(snapShot: DataSnapshot) {
@@ -128,8 +129,17 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                                 loginUserName.setText("")
                                 loginMobile.setText("")
                                 loginOutletName.setText("")
-                                customProgressDialog.dismiss()
-                                confirmationCodeAlert()
+                                progress.dismiss()
+                                if (isDialogVerified) {
+                                    startActivity(
+                                        android.content.Intent(
+                                            this@SignInActivity,
+                                            HomeActivity::class.java
+                                        )
+                                    )
+                                } else {
+                                    confirmationCodeAlert()
+                                }
                             }
                         }
                     } else {
@@ -151,7 +161,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                         if (error == null) {
                             readFromFireBase(userSignInModel)
                         } else {
-                            customProgressDialog.dismiss()
+                            progress.dismiss()
                             Toast.makeText(
                                 this@SignInActivity,
                                 "Fail to create user. Please try again",
@@ -166,14 +176,14 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun readOutletToFireBase() {
         if (AppUtils.networkConnectivityCheck(this)) {
-            customProgressDialog.show()
+            progress.show()
             val firebaseReference = FirebaseDatabase.getInstance()
                 .getReference(ConstantUtils.DETAILS)
                 .child(ConstantUtils.OUTLET)
 
             firebaseReference.addValueEventListener(object : ValueEventListener {
                 override fun onCancelled(error: DatabaseError) {
-                    customProgressDialog.dismiss()
+                    progress.dismiss()
                 }
 
                 override fun onDataChange(dataSnapShot: DataSnapshot) {
@@ -186,7 +196,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                         outletName.add(element.businessOutlet)
                     }
                     setupOutletTextView(outletName)
-                    customProgressDialog.dismiss()
+                    progress.dismiss()
                 }
             })
         }
@@ -247,16 +257,26 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
             builder.setPositiveButton(
                 "Verify"
             ) { dialog, _ ->
-                dialog?.dismiss()
                 if (preferenceSharedUtils.getSignInCode() == codeText.text.toString()) {
                     preferenceSharedUtils.setUserSignInStatus(true)
-                    startActivity(
-                        android.content.Intent(
-                            this@SignInActivity,
-                            HomeActivity::class.java
+                    progress.show()
+                    dialog?.dismiss()
+                    isDialogVerified = true
+                    with (preferenceSharedUtils) {
+                        writeToFireBase(
+                            UserSignInModel(
+                            getUserFireBaseChildId(),
+                                getUserName(),
+                                getMobileNumber(),
+                                getOutletName(),
+                                getSignInCode(),
+                                true,
+                                getAdminStatus()
                         )
-                    )
+                        )
+                    }
                 } else {
+                    isDialogVerified = false
                     Toast.makeText(this, "Invalid code", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -282,7 +302,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                     if (userName.isNotEmpty() && userMobile.isNotEmpty() && userMobile.length == 10
                         && outletName.isNotEmpty() && outletCode.isNotEmpty() && userId.isNotEmpty() && verificationCode.isNotEmpty()
                     ) {
-                        customProgressDialog.show()
+                        progress.show()
                         val userSignInModel =
                             UserSignInModel(
                                 userId,

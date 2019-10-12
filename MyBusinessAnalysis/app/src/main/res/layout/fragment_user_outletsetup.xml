@@ -49,6 +49,7 @@
                     android:id="@+id/frag_setup_contact_id"
                     android:hint="@string/contact_number"
                     android:inputType="phone"
+                    android:maxLength="10"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"/>
             </android.support.design.widget.TextInputLayout>

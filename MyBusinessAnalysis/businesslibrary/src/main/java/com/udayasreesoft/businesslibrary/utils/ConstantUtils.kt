@@ -14,6 +14,7 @@ class ConstantUtils {
 
         @JvmField val USERS = "Users"
         @JvmField val DETAILS = "Details"
+        @JvmField val PROFILES = "Profiles"
         @JvmField val OUTLET = "Outlets"
         @JvmField val ADMIN = "Admins"
         @JvmField val COMPANY= "Company"

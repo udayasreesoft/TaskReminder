@@ -23,6 +23,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE-FIREBASE.txt'
+        exclude 'META-INF/NOTICE'
+    }
 }
 
 dependencies {
@@ -31,6 +36,8 @@ dependencies {
 
     implementation "com.android.support:appcompat-v7:$appsupportversion"
     implementation "com.android.support:support-v4:$appsupportversion"
+    implementation 'com.google.firebase:firebase-storage:16.0.4'
+    implementation 'com.google.firebase:firebase-auth:16.0.5'
     testImplementation "junit:junit:$junitversion"
     androidTestImplementation "com.android.support.test:runner:$runnerversion"
     androidTestImplementation "com.android.support.test.espresso:espresso-core:$espressoversion"
