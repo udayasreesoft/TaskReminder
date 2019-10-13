@@ -3,7 +3,6 @@ package com.udayasreesoft.adminbusinessanalysis.fragments
 
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -38,7 +37,7 @@ class UserFragment : Fragment(), View.OnClickListener {
     private lateinit var userAdminCodeText: EditText
     private lateinit var userAddBtn: Button
 
-    private lateinit var customProgressDialog: CustomProgressDialog
+    private lateinit var progress: CustomProgressDialog
 
     private lateinit var outletNameList: ArrayList<String>
     private var isOutletSelected = false
@@ -69,23 +68,23 @@ class UserFragment : Fragment(), View.OnClickListener {
         userAddBtn.setOnClickListener(this)
         userPinCodeBtn.setOnClickListener(this)
 
-        customProgressDialog = CustomProgressDialog(context!!).getInstance()
-        customProgressDialog.setMessage("Connecting to Server. Please wait...")
-        customProgressDialog.build()
+        progress = CustomProgressDialog(context!!).getInstance()
+        progress.setMessage("Connection to server. Please wait until process finish...")
+        progress.build()
         readOutletToFireBase()
 
     }
 
     private fun readOutletToFireBase() {
         if (AppUtils.networkConnectivityCheck(context!!)) {
-            customProgressDialog.show()
+            progress.show()
             val firebaseReference = FirebaseDatabase.getInstance()
                 .getReference(ConstantUtils.DETAILS)
                 .child(ConstantUtils.OUTLET)
 
             firebaseReference.addValueEventListener(object : ValueEventListener {
                 override fun onCancelled(error: DatabaseError) {
-                    customProgressDialog.dismiss()
+                    progress.dismiss()
                 }
 
                 override fun onDataChange(dataSnapShot: DataSnapshot) {
@@ -97,7 +96,7 @@ class UserFragment : Fragment(), View.OnClickListener {
                         outletNameList.add(element.businessOutlet)
                     }
                     setupOutletTextView(outletNameList)
-                    customProgressDialog.dismiss()
+                    progress.dismiss()
                 }
             })
         }
@@ -160,12 +159,49 @@ class UserFragment : Fragment(), View.OnClickListener {
         }
     }
 
+    private fun readFromFireBase(userSignInModel: UserSignInModel) {
+        if (AppUtils.networkConnectivityCheck(context!!)) {
+            val fireBaseReference = FirebaseDatabase.getInstance()
+                .getReference(userSignInModel.userOutlet)
+                .child(ConstantUtils.USERS)
+                .child(userSignInModel.userMobile)
+
+            fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(error: DatabaseError) {
+                    progress.dismiss()
+                }
+
+                override fun onDataChange(snapShot: DataSnapshot) {
+                    if (snapShot.exists()) {
+                        val model = snapShot.getValue(UserSignInModel::class.java)
+                        if (model != null) {
+                            userNameText.setText("")
+                            userMobileText.setText("")
+                            userOutletText.setText("")
+                            userAddressText.setText("")
+                            userAdminCodeText.setText("")
+                            progress.dismiss()
+                            Toast.makeText(
+                                context,
+                                "Admin details already exist",
+                                Toast.LENGTH_SHORT
+                            )
+                                .show()
+                        }
+                    } else {
+                        writeUserToFirebase(userSignInModel)
+                    }
+                }
+            })
+        }
+    }
+
     private fun writeUserToFirebase(userSignInModel: UserSignInModel) {
         if (AppUtils.networkConnectivityCheck(context!!)) {
             with(userSignInModel) {
                 FirebaseDatabase.getInstance()
-                    .getReference(ConstantUtils.USERS)
-                    .child(outletName)
+                    .getReference(userOutlet)
+                    .child(ConstantUtils.USERS)
                     .child(userMobile)
                     .setValue(userSignInModel) { error, _ ->
                         if (error == null) {
@@ -174,7 +210,7 @@ class UserFragment : Fragment(), View.OnClickListener {
                             userOutletText.setText("")
                             userAddressText.setText("")
                             userAdminCodeText.setText("")
-                            customProgressDialog.dismiss()
+                            progress.dismiss()
                             Toast.makeText(
                                 context,
                                 "Successfully Created Admin",
@@ -182,7 +218,7 @@ class UserFragment : Fragment(), View.OnClickListener {
                             )
                                 .show()
                         } else {
-                            customProgressDialog.dismiss()
+                            progress.dismiss()
                             Toast.makeText(
                                 context,
                                 "Fail to create user. Please try again",
@@ -197,7 +233,7 @@ class UserFragment : Fragment(), View.OnClickListener {
 
     private fun getZipCodeAddress(zipcode: String) {
         if (AppUtils.networkConnectivityCheck(context!!) && zipcode.isNotEmpty() || zipcode.isNotBlank()) {
-            customProgressDialog.show()
+            progress.show()
             val apiInterface = ApiClient.getZipCodeApiClient().create(ApiInterface::class.java)
             val call = apiInterface.getZipCodeAddress(zipcode)
             call.enqueue(object : Callback<ZipcodeModel> {
@@ -264,7 +300,7 @@ class UserFragment : Fragment(), View.OnClickListener {
             isFocusable = true
         }
         userPinCodeBtn.visibility = View.GONE
-        customProgressDialog.dismiss()
+        progress.dismiss()
     }
 
     override fun onClick(v: View?) {
@@ -288,7 +324,7 @@ class UserFragment : Fragment(), View.OnClickListener {
                 if (userName.isNotEmpty() && mobile.isNotEmpty() && mobile.length == 10 && outletName.isNotEmpty()
                     && address.isNotEmpty() && adminCode.isNotEmpty() && adminCode.length == 6
                 ) {
-                    customProgressDialog.show()
+                    progress.show()
                     val userSignInModel =
                         UserSignInModel(
                             userName,

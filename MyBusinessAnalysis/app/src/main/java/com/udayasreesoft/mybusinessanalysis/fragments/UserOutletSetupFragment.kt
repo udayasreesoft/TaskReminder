@@ -15,7 +15,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.nostra13.universalimageloader.core.DisplayImageOptions
@@ -38,6 +41,8 @@ import com.udayasreesoft.mybusinessanalysis.retorfit.model.PostOffice
 import com.udayasreesoft.mybusinessanalysis.retorfit.model.ZipcodeModel
 import retrofit2.Call
 import retrofit2.Callback
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class UserOutletSetupFragment : Fragment(), View.OnClickListener {
@@ -46,10 +51,11 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
     private lateinit var outletName: EditText
     private lateinit var outletContact: EditText
     private lateinit var outletAddress: AutoCompleteTextView
+    private lateinit var outletZipcode : EditText
     private lateinit var outletSearch: ImageView
-    private lateinit var outletLogoText: TextView
+    private lateinit var outletLogoEdit: TextView
     private lateinit var outletLogoImage: ImageView
-    private lateinit var outletBannerText: TextView
+    private lateinit var outletBannerEdit: ImageView
     private lateinit var outletBannerImage: ImageView
     private lateinit var outletSave: Button
 
@@ -78,36 +84,39 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
         outletName = view.findViewById(R.id.frag_setup_name_id)
         outletContact = view.findViewById(R.id.frag_setup_contact_id)
         outletAddress = view.findViewById(R.id.frag_setup_address_id)
-        outletSearch = view.findViewById(R.id.frag_setup_zipcode_id)
-        outletLogoText = view.findViewById(R.id.frag_setup_logo_text_id)
+        outletZipcode = view.findViewById(R.id.frag_setup_zipcode_id)
+        outletSearch = view.findViewById(R.id.frag_setup_search_id)
         outletLogoImage = view.findViewById(R.id.frag_setup_logo_id)
-        outletBannerText = view.findViewById(R.id.frag_setup_banner_text_id)
+        outletLogoEdit = view.findViewById(R.id.frag_Setup_edit_logo_id)
+        outletBannerEdit = view.findViewById(R.id.frag_setup_edit_banner_id)
         outletBannerImage = view.findViewById(R.id.frag_setup_banner_id)
         outletSave = view.findViewById(R.id.frag_setup_save_btn_id)
 
-        outletBannerImage.layoutParams.height = (AppUtils.SCREEN_WIDTH * 0.70).toInt()
+        outletBannerImage.layoutParams.height = (AppUtils.SCREEN_WIDTH * 0.50).toInt()
 
         outletLogoImage.layoutParams.width = (AppUtils.SCREEN_WIDTH * 0.40).toInt()
         outletLogoImage.layoutParams.height = (AppUtils.SCREEN_WIDTH * 0.40).toInt()
 
         outletSave.setOnClickListener(this)
         outletSearch.setOnClickListener(this)
-        outletBannerImage.setOnClickListener(this)
-        outletLogoImage.setOnClickListener(this)
+        outletLogoEdit.setOnClickListener(this)
+        outletBannerEdit.setOnClickListener(this)
 
         preferenceSharedUtils = PreferenceSharedUtils(context!!).getInstance()
         progress = CustomProgressDialog(context!!).getInstance()
+        progress.setMessage("Connection to server. Please wait until process finish...")
+        progress.build()
 
-        outletName.setText(preferenceSharedUtils.getOutletName())
         setupImageLoader()
+        readOutletDetailsFromFireBase()
     }
 
     private fun setupImageLoader() {
         roundDisplayOption = DisplayImageOptions.Builder()
             .displayer(RoundedBitmapDisplayer(1000))
-            .showImageOnLoading(android.R.drawable.stat_sys_download_done)
-            .showImageForEmptyUri(android.R.drawable.stat_notify_error)
-            .showImageOnFail(android.R.drawable.stat_notify_error)
+            .showImageOnLoading(R.drawable.ic_default)
+            .showImageForEmptyUri(R.drawable.ic_default)
+            .showImageOnFail(R.drawable.ic_default)
             .cacheInMemory(true)
             .cacheOnDisk(true)
             .considerExifParams(true)
@@ -136,8 +145,6 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
 
     private fun getZipCodeAddress(zipcode: String) {
         if (AppUtils.networkConnectivityCheck(context!!) && zipcode.isNotEmpty() || zipcode.isNotBlank()) {
-            progress.setMessage("Fetching your Address...")
-            progress.build()
             progress.show()
             val apiInterface = ApiClient.getZipCodeApiClient().create(ApiInterface::class.java)
             val call = apiInterface.getZipCodeAddress(zipcode)
@@ -210,7 +217,6 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
             hint = "Outlet Address"
             isFocusable = true
         }
-        outletSearch.visibility = View.GONE
         progress.dismiss()
     }
 
@@ -225,7 +231,10 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         try {
-            if (requestCode == ConstantUtils.PERMISSION_GALLERY && resultCode == Activity.RESULT_OK && data != null && AppUtils.networkConnectivityCheck(context!!)) {
+            if (requestCode == ConstantUtils.PERMISSION_GALLERY && resultCode == Activity.RESULT_OK && data != null && AppUtils.networkConnectivityCheck(
+                    context!!
+                )
+            ) {
                 val selectedImage = data.data
 
                 val filePathColumn = arrayOf(MediaStore.Images.Media.DATA)
@@ -257,43 +266,128 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
         }
     }
 
-    private fun storeImageToFireBase(url: String, imageView : ImageView) {
+    private fun storeImageToFireBase(url: String, imageView: ImageView) {
         if (url.isNotEmpty() && AppUtils.networkConnectivityCheck(context!!)) {
 
-            imageLoader.displayImage(url, imageView, if (isLogoImage){roundDisplayOption} else{displayOptions}, object : ImageLoadingListener {
-                override fun onLoadingComplete(imageUri: String?, view: View?, loadedImage: Bitmap?) {
-                    val companyName = preferenceSharedUtils.getOutletName() ?: ""
-                    if (companyName.isNotEmpty() && companyName.isNotBlank()) {
-                        progress.show()
-                        val ext = url.substring(url.lastIndexOf("."))
-                        val storageReference: StorageReference = FirebaseStorage.getInstance()
-                            .getReference(companyName.plus("/"))
-                            .child(ConstantUtils.PROFILES)
-                            .child("${companyName}_${if (isLogoImage) {"Logo"} else {"Banner"}}$ext")
+            imageLoader.displayImage(
+                url, imageView, if (isLogoImage) {
+                    roundDisplayOption
+                } else {
+                    displayOptions
+                }, object : ImageLoadingListener {
+                    override fun onLoadingComplete(
+                        imageUri: String?,
+                        view: View?,
+                        loadedImage: Bitmap?
+                    ) {
+                        val companyName = preferenceSharedUtils.getOutletName() ?: ""
+                        if (companyName.isNotEmpty() && companyName.isNotBlank()) {
+                            progress.show()
+                            val ext = url.substring(url.lastIndexOf("."))
+                            val storageReference: StorageReference = FirebaseStorage.getInstance()
+                                .getReference(companyName.plus("/"))
+                                .child(ConstantUtils.PROFILES)
+                                .child(
+                                    "${companyName}_${if (isLogoImage) {
+                                        "Logo"
+                                    } else {
+                                        "Banner"
+                                    }}$ext"
+                                )
 
-                        storageReference.putFile(Uri.parse(url))
-                            .addOnSuccessListener { taskSnapShot ->
-                                progress.dismiss()
-                                if (isLogoImage) {
-                                    outletLogoUrl = taskSnapShot.metadata?.reference?.downloadUrl.toString()
-                                } else {
-                                    outletBannerUrl = taskSnapShot.metadata?.reference?.downloadUrl.toString()
+                            storageReference.putFile(Uri.parse(url))
+                                .addOnSuccessListener { taskSnapShot ->
+                                    progress.dismiss()
+                                    if (isLogoImage) {
+                                        outletLogoUrl =
+                                            taskSnapShot.metadata?.reference?.downloadUrl.toString()
+                                    } else {
+                                        outletBannerUrl =
+                                            taskSnapShot.metadata?.reference?.downloadUrl.toString()
+                                    }
                                 }
-                            }
 
-                            .addOnFailureListener {
-                                progress.dismiss()
-                                Toast.makeText(context!!, "Fail to store Company ${if (isLogoImage) {"Logo"} else {"Banner"}}" +
-                                        "Please try again", Toast.LENGTH_SHORT).show()
-                            }
+                                .addOnFailureListener {
+                                    progress.dismiss()
+                                    Toast.makeText(
+                                        context!!, "Fail to store Company ${if (isLogoImage) {
+                                            "Logo"
+                                        } else {
+                                            "Banner"
+                                        }}" +
+                                                "Please try again", Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                        }
+
                     }
 
+                    override fun onLoadingStarted(imageUri: String?, view: View?) {}
+                    override fun onLoadingCancelled(imageUri: String?, view: View?) {}
+                    override fun onLoadingFailed(
+                        imageUri: String?,
+                        view: View?,
+                        failReason: FailReason?
+                    ) {
+                    }
+                })
+        }
+    }
+
+    private fun readOutletDetailsFromFireBase() {
+        if (AppUtils.networkConnectivityCheck(context!!)) {
+            progress.show()
+            val fireBaseReference = FirebaseDatabase.getInstance()
+                .getReference(ConstantUtils.DETAILS)
+                .child(ConstantUtils.COMPANY)
+                .child(preferenceSharedUtils.getOutletName()!!)
+
+            fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(error: DatabaseError) {
+                    progress.dismiss()
                 }
-                override fun onLoadingStarted(imageUri: String?, view: View?) {}
-                override fun onLoadingCancelled(imageUri: String?, view: View?) {}
-                override fun onLoadingFailed(imageUri: String?, view: View?, failReason: FailReason?) {}
+
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        val companyModel = dataSnapshot.getValue(CompanyModel::class.java)
+                        if (companyModel != null) {
+                            setModelDataToView(companyModel)
+                        }
+                    } else {
+                        setModelDataToView(CompanyModel(preferenceSharedUtils.getOutletName(),
+                            "", "", ConstantUtils.DEFAULT_LOGO, ConstantUtils.DEFAULT_BANNER))
+                    }
+                }
             })
         }
+    }
+
+    private fun setModelDataToView(companyModel: CompanyModel) {
+        outletName.setText(companyModel.outletName ?: "")
+        outletContact.setText(companyModel.outletContact ?: "")
+        outletAddress.setText(companyModel.outletAddress ?: "")
+        if (AppUtils.networkConnectivityCheck(context!!)) {
+
+            outletLogoUrl = if(companyModel.outletLogo != null && companyModel.outletLogo.isNotEmpty()) {
+                preferenceSharedUtils.setOutletLogoUrl(companyModel.outletLogo)
+                companyModel.outletLogo
+            } else {ConstantUtils.DEFAULT_LOGO}
+            outletBannerUrl = if(companyModel.outletBanner != null && companyModel.outletBanner.isNotEmpty()) {
+                preferenceSharedUtils.setOutletBannerUrl(companyModel.outletBanner)
+                companyModel.outletBanner
+            } else {ConstantUtils.DEFAULT_BANNER}
+
+            imageLoader.displayImage(
+                outletLogoUrl,
+                outletLogoImage,
+                roundDisplayOption)
+
+            imageLoader.displayImage(
+                outletBannerUrl,
+                outletBannerImage,
+                displayOptions)
+        }
+        progress.dismiss()
     }
 
     private fun writeOutletDetailsToFireBase() {
@@ -302,12 +396,22 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
         val address = outletAddress.text.toString()
 
         if (name.isNotEmpty() && contact.isNotEmpty() && contact.length == 10
-            && address.isNotEmpty() && AppUtils.networkConnectivityCheck(context!!)) {
-
+            && address.isNotEmpty() && AppUtils.networkConnectivityCheck(context!!)
+        ) {
+            progress.show()
             FirebaseDatabase.getInstance()
                 .getReference(ConstantUtils.DETAILS)
                 .child(ConstantUtils.COMPANY)
-                .setValue(CompanyModel(name, address, contact, outletLogoUrl ?: "NA", outletBannerUrl ?: "NA"))
+                .child(preferenceSharedUtils.getOutletName()!!)
+                .setValue(
+                    CompanyModel(
+                        name,
+                        address,
+                        contact,
+                        outletLogoUrl ?: "NA",
+                        outletBannerUrl ?: "NA"
+                    )
+                )
 
         } else {
             if (name.isEmpty() && name.isBlank()) {
@@ -329,25 +433,20 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
     override fun onClick(view: View?) {
         when (view?.id) {
             R.id.frag_setup_save_btn_id -> {
-                progress.setTitle("Uploading Details to server")
-                progress.setMessage("Please wait until uploading finish")
-                progress.build()
                 progress.show()
                 writeOutletDetailsToFireBase()
             }
 
-            R.id.frag_setup_zipcode_id -> {
-                if (outletSearch.visibility == View.VISIBLE) {
-                    getZipCodeAddress(outletAddress.text.toString())
-                }
+            R.id.frag_setup_search_id -> {
+                getZipCodeAddress(outletZipcode.text.toString())
             }
 
-            R.id.frag_setup_logo_id -> {
+            R.id.frag_Setup_edit_logo_id -> {
                 isLogoImage = true
                 setupGallery()
             }
 
-            R.id.frag_setup_banner_id -> {
+            R.id.frag_setup_edit_banner_id -> {
                 isLogoImage = false
                 setupGallery()
             }

@@ -4,7 +4,7 @@ import android.app.ProgressDialog
 import android.content.Context
 
 class CustomProgressDialog(val context: Context) {
-    private lateinit var progressDialog: ProgressDialog
+    private var progressDialog: ProgressDialog? = null
     private var customProgressDialog : CustomProgressDialog? = null
     private var progressTitle : String = ""
     private var progressMessage : String = ""
@@ -19,30 +19,36 @@ class CustomProgressDialog(val context: Context) {
 
     fun setTitle(title : String) {
         progressTitle = title
+        if (progressDialog != null && !progressDialog!!.isShowing) {
+            progressDialog!!.setTitle(progressTitle)
+        }
     }
 
     fun setMessage(message : String) {
         progressMessage = message
+        if (progressDialog != null && !progressDialog!!.isShowing) {
+            progressDialog!!.setMessage(progressMessage)
+        }
     }
 
     fun build() {
         progressDialog = ProgressDialog(context)
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER)
-        progressDialog.setTitle(progressTitle)
-        progressDialog.setMessage(progressMessage)
-        progressDialog.setCanceledOnTouchOutside(false)
-        progressDialog.setCancelable(false)
+        progressDialog!!.setProgressStyle(ProgressDialog.STYLE_SPINNER)
+        progressDialog!!.setTitle(progressTitle)
+        progressDialog!!.setMessage(progressMessage)
+        progressDialog!!.setCanceledOnTouchOutside(false)
+        progressDialog!!.setCancelable(false)
     }
 
     fun show() {
-        if (progressDialog != null && !progressDialog.isShowing) {
-            progressDialog.show()
+        if (progressDialog != null && !progressDialog!!.isShowing) {
+            progressDialog!!.show()
         }
     }
 
     fun dismiss() {
-        if (progressDialog != null && progressDialog.isShowing) {
-            progressDialog.dismiss()
+        if (progressDialog != null && progressDialog!!.isShowing) {
+            progressDialog!!.dismiss()
         }
     }
 }

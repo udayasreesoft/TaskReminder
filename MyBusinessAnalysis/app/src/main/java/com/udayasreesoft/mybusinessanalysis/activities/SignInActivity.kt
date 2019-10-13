@@ -93,7 +93,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
         loginBtn.setOnClickListener(this)
 
         progress = CustomProgressDialog(this).getInstance()
-        progress.setMessage("Connecting to Server. Please wait...")
+        progress.setMessage("Connection to server. Please wait until process finish...")
         progress.build()
 
         readOutletToFireBase()
@@ -102,8 +102,8 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
     private fun readFromFireBase(userSignInModel: UserSignInModel) {
         if (AppUtils.networkConnectivityCheck(this)) {
             val fireBaseReference = FirebaseDatabase.getInstance()
-                .getReference(ConstantUtils.USERS)
-                .child(userSignInModel.userOutlet)
+                .getReference(userSignInModel.userOutlet)
+                .child(ConstantUtils.USERS)
                 .child(userSignInModel.userMobile)
 
             fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -154,9 +154,9 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
         if (AppUtils.networkConnectivityCheck(this)) {
             with(userSignInModel) {
                 FirebaseDatabase.getInstance()
-                    .getReference(ConstantUtils.USERS)
-                    .child(userOutlet)
-                    .child(userMobile)
+                    .getReference(userSignInModel.userOutlet)
+                    .child(ConstantUtils.USERS)
+                    .child(userSignInModel.userMobile)
                     .setValue(userSignInModel) { error, _ ->
                         if (error == null) {
                             readFromFireBase(userSignInModel)

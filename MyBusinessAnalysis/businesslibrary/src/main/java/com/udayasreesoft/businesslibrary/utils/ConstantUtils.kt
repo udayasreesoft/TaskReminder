@@ -3,7 +3,7 @@ package com.udayasreesoft.businesslibrary.utils
 class ConstantUtils {
     companion object {
         @JvmField val TASK_SLNO = "task_slno"
-        @JvmField val REMINDER_LIST_CODE = 1
+        @JvmField val PAY_LIST_CODE = 1
         @JvmField val PERMISSION_REQUESTED = 2
         @JvmField val PERMISSION_GALLERY = 3
 
@@ -12,11 +12,15 @@ class ConstantUtils {
         @JvmField val MINUTE = 0
         @JvmField val SECOND = 0
 
+        @JvmField val DEFAULT_LOGO = "https://firebasestorage.googleapis.com/v0/b/my-business-analysis.appspot.com/o/default%2Fdefault_logo.png?alt=media&token=c3f7155d-10c5-4cfa-81c3-83ec5a89ff9b"
+        @JvmField val DEFAULT_BANNER = "https://firebasestorage.googleapis.com/v0/b/my-business-analysis.appspot.com/o/default%2Fdefault_banner.jpg?alt=media&token=f1b92854-07fa-4607-aaaa-52e062a3a5f9"
+
         @JvmField val USERS = "Users"
         @JvmField val DETAILS = "Details"
         @JvmField val PROFILES = "Profiles"
         @JvmField val OUTLET = "Outlets"
-        @JvmField val ADMIN = "Admins"
+        @JvmField val CLIENT = "Clients"
         @JvmField val COMPANY= "Company"
+        @JvmField val PAYMENT = "Payment"
     }
 }

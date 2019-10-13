@@ -21,6 +21,6 @@
         android:layout_gravity="start"
         app:headerLayout="@layout/nav_header_home"
         android:background="@drawable/side_nav_bar"
-        app:itemIconTint="@color/colorAccent"
+        app:itemIconTint="@color/colorPrimary"
         app:itemTextColor="@android:color/white"/>
 </android.support.v4.widget.DrawerLayout>

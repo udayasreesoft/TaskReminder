@@ -10,6 +10,9 @@ public class TaskDataTable {
     @PrimaryKey(autoGenerate = true)
     private int slNo;
 
+    @ColumnInfo(name = "uniqueKey")
+    private String uniqueKey;
+
     @ColumnInfo(name = "company_name")
     private String companyName;
 
@@ -28,13 +31,22 @@ public class TaskDataTable {
     @ColumnInfo(name = "days")
     private int days;
 
-    public TaskDataTable(String companyName, long date,  String amount, String chequeNo, Boolean isTaskCompleted, int days) {
+    public TaskDataTable(String uniqueKey, String companyName, long date,  String amount, String chequeNo, Boolean isTaskCompleted, int days) {
+        this.uniqueKey = uniqueKey;
         this.companyName = companyName;
         this.date = date;
         this.amount = amount;
         this.chequeNo = chequeNo;
         this.isTaskCompleted = isTaskCompleted;
         this.days = days;
+    }
+
+    public String getUniqueKey() {
+        return uniqueKey;
+    }
+
+    public void setUniqueKey(String uniqueKey) {
+        this.uniqueKey = uniqueKey;
     }
 
     public int getSlNo() {

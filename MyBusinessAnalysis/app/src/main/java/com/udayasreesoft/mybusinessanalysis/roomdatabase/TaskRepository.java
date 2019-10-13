@@ -58,6 +58,10 @@ public class TaskRepository {
         }.execute();
     }
 
+    public List<TaskDataTable> queryAllTask() {
+        return databasePersistence.daoAccess().fetchAllTasks();
+    }
+
     public List<TaskDataTable> queryTask(final boolean isStatus) {
         return databasePersistence.daoAccess().fetchTasks(isStatus);
     }
@@ -72,5 +76,15 @@ public class TaskRepository {
 
     public List<TimeDataTable> queryDateInMillis(boolean isStatus) {
         return databasePersistence.daoAccess().getDateFromDB(isStatus);
+    }
+
+    public void clearDataBase() {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                databasePersistence.daoAccess().deleteDataBaseTable();
+                return null;
+            }
+        };
     }
 }

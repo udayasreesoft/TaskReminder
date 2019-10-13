@@ -24,6 +24,15 @@ class AppUtils {
             return Random().nextInt(999999)
         }
 
+        fun uniqueKey() : String {
+            val characters : String = "0123456789AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz"
+            var key = ""
+            for (c in 0 until 11) {
+                key += characters[Random().nextInt(characters.length)]
+            }
+            return key
+        }
+
         fun fireBaseChildId(outletCode : String) : String {
             val characters : String = "0123456789AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz"
             var userId = outletCode

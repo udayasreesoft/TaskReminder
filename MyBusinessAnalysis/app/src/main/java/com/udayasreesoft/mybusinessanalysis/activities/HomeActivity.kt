@@ -1,9 +1,12 @@
 package com.udayasreesoft.mybusinessanalysis.activities
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.os.AsyncTask
 import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -12,6 +15,7 @@ import android.support.design.widget.NavigationView
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
+import android.support.v4.os.ConfigurationCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AlertDialog
@@ -19,18 +23,32 @@ import android.support.v7.widget.Toolbar
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.nostra13.universalimageloader.core.DisplayImageOptions
 import com.nostra13.universalimageloader.core.ImageLoader
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration
 import com.nostra13.universalimageloader.core.assist.ImageScaleType
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer
+import com.udayasreesoft.businesslibrary.models.HomeModel
+import com.udayasreesoft.businesslibrary.models.PaymentModel
+import com.udayasreesoft.businesslibrary.models.PaymentModelMain
 import com.udayasreesoft.businesslibrary.utils.AppUtils
 import com.udayasreesoft.businesslibrary.utils.ConstantUtils
+import com.udayasreesoft.businesslibrary.utils.CustomProgressDialog
 import com.udayasreesoft.businesslibrary.utils.PreferenceSharedUtils
 import com.udayasreesoft.mybusinessanalysis.R
 import com.udayasreesoft.mybusinessanalysis.fragments.*
+import com.udayasreesoft.mybusinessanalysis.fragments.payableui.PayFragment
+import com.udayasreesoft.mybusinessanalysis.fragments.payableui.UserPayableFragment
+import com.udayasreesoft.mybusinessanalysis.roomdatabase.TaskDataTable
+import com.udayasreesoft.mybusinessanalysis.roomdatabase.TaskRepository
+import java.text.NumberFormat
 
-class HomeActivity : AppCompatActivity() {
+@SuppressLint("StaticFieldLeak")
+class HomeActivity : AppCompatActivity(), PayFragment.PayInterface {
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navigationView: NavigationView
     private lateinit var navAppBar: AppBarLayout
@@ -38,11 +56,17 @@ class HomeActivity : AppCompatActivity() {
 
     private lateinit var fragmentContainer: FrameLayout
     private lateinit var displayOptions: DisplayImageOptions
+    private lateinit var roundDisplayOptions : DisplayImageOptions
     private lateinit var imageLoader: ImageLoader
 
     private var FRAGMENT_POSITION = 0
 
+    private lateinit var homeModelList : ArrayList<HomeModel>
+    private var totalPaidSum = 0
+    private var totalPayableSum = 0
+
     private lateinit var preferenceSharedUtils: PreferenceSharedUtils
+    private lateinit var progress : CustomProgressDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,16 +81,23 @@ class HomeActivity : AppCompatActivity() {
     private fun initView() {
         preferenceSharedUtils = PreferenceSharedUtils(this).getInstance()
         AppUtils.isAdminStatus = preferenceSharedUtils.getAdminStatus()
+        homeModelList = ArrayList<HomeModel>()
+
+        progress = CustomProgressDialog(this@HomeActivity).getInstance()
+        progress.setMessage("Connection to server. Please wait until process finish...")
+        progress.build()
+
         drawerLayout = findViewById(R.id.home_nav_drawer_id)
         navigationView = findViewById(R.id.home_nav_view_id)
         navAppBar = findViewById(R.id.nav_appbar_home_id)
         fragmentContainer = findViewById(R.id.nav_appbar_container_id)
         navToolbar = findViewById(R.id.nav_appbar_toolbar_id)
+        navToolbar.setTitleTextColor(Color.WHITE)
         setSupportActionBar(navToolbar)
         setupImageLoader()
         setupNavigationDrawer()
         setupNavigationHeader()
-        fragmentLauncher()
+        getPayAccountDetailsFromFireBase()
     }
 
     private fun setupMPermissions() {
@@ -90,11 +121,21 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupImageLoader() {
-        displayOptions = DisplayImageOptions.Builder()
+        roundDisplayOptions = DisplayImageOptions.Builder()
             .displayer(RoundedBitmapDisplayer(1000))
-            .showImageOnLoading(android.R.drawable.stat_sys_download_done)
-            .showImageForEmptyUri(android.R.drawable.stat_notify_error)
-            .showImageOnFail(android.R.drawable.stat_notify_error)
+            .showImageOnLoading(R.drawable.ic_default)
+            .showImageForEmptyUri(R.drawable.ic_default)
+            .showImageOnFail(R.drawable.ic_default)
+            .cacheInMemory(true)
+            .cacheOnDisk(true)
+            .considerExifParams(true)
+            .imageScaleType(ImageScaleType.EXACTLY)
+            .build()
+
+        displayOptions = DisplayImageOptions.Builder()
+            .showImageOnLoading(R.drawable.ic_default)
+            .showImageForEmptyUri(R.drawable.ic_default)
+            .showImageOnFail(R.drawable.ic_default)
             .cacheInMemory(true)
             .cacheOnDisk(true)
             .considerExifParams(true)
@@ -118,7 +159,13 @@ class HomeActivity : AppCompatActivity() {
         )
 
         drawerLayout.addDrawerListener(actionBarDrawerToggle)
+        actionBarDrawerToggle.drawerArrowDrawable.color = ContextCompat.getColor(this, android.R.color.white)
         actionBarDrawerToggle.syncState()
+
+        val navMenu = navigationView.menu
+        if (!preferenceSharedUtils.getAdminStatus()) {
+            navMenu.findItem(R.id.menu_outlet_setup_client).setVisible(false)
+        }
 
         navigationView.setNavigationItemSelectedListener { menu ->
             when (menu.itemId) {
@@ -142,18 +189,13 @@ class HomeActivity : AppCompatActivity() {
                     fragmentLauncher()
                 }
 
-                R.id.menu_drawable_availablestock -> {
+                R.id.menu_outlet_setup_client -> {
                     FRAGMENT_POSITION = 4
                     fragmentLauncher()
                 }
 
-                R.id.menu_outlet_setup_client -> {
-                    FRAGMENT_POSITION = 5
-                    fragmentLauncher()
-                }
-
                 R.id.menu_drawable_client -> {
-                    FRAGMENT_POSITION = 6
+                    FRAGMENT_POSITION = 5
                     fragmentLauncher()
                 }
             }
@@ -166,7 +208,7 @@ class HomeActivity : AppCompatActivity() {
         var fragment: Fragment? = null
         when (FRAGMENT_POSITION) {
             0 -> {
-                fragment = UserHomeFragment()
+                fragment = UserHomeFragment.newInstance(homeModelList)
             }
 
             1 -> {
@@ -182,14 +224,10 @@ class HomeActivity : AppCompatActivity() {
             }
 
             4 -> {
-                fragment = UserStockFragment()
-            }
-
-            5 -> {
                 fragment = UserOutletSetupFragment()
             }
 
-            6 -> {
+            5 -> {
                 fragment = UserClientsFragment()
             }
         }
@@ -208,12 +246,112 @@ class HomeActivity : AppCompatActivity() {
         val headerBanner: ImageView = headerView.findViewById(R.id.nav_header_banner)
         val headerProfile: ImageView = headerView.findViewById(R.id.nav_header_profile)
 
-        imageLoader.displayImage("", headerBanner, displayOptions)
-        imageLoader.displayImage("", headerProfile, displayOptions)
+        imageLoader.displayImage(preferenceSharedUtils.getOutletBannerUrl(), headerBanner, displayOptions)
+        imageLoader.displayImage(preferenceSharedUtils.getOutletLogoUrl(), headerProfile, roundDisplayOptions)
 
         headerView.findViewById<TextView>(R.id.nav_header_name).text = preferenceSharedUtils.getUserName()
         headerView.findViewById<TextView>(R.id.nav_header_mobile).text = preferenceSharedUtils.getMobileNumber()
         headerView.findViewById<TextView>(R.id.nav_header_outletname).text = preferenceSharedUtils.getOutletName()
+    }
+
+    private fun getPayAccountDetailsFromFireBase() {
+        if (AppUtils.networkConnectivityCheck(this@HomeActivity)) {
+            val outletNameForDB = preferenceSharedUtils.getOutletName()
+            if (outletNameForDB != null && outletNameForDB.isNotEmpty()
+                && outletNameForDB.isNotBlank() && outletNameForDB != "NA") {
+                progress.show()
+                val fireBaseReference = FirebaseDatabase.getInstance()
+                    .getReference(outletNameForDB)
+                    .child(ConstantUtils.PAYMENT)
+
+                fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onCancelled(error: DatabaseError) {
+                        progress.dismiss()
+                    }
+                    override fun onDataChange(dataSnapShot: DataSnapshot) {
+                        if (dataSnapShot.exists()) {
+                            var isOneTime = true
+                            for (element in dataSnapShot.children) {
+                                val mainModel = element.getValue(PaymentModelMain::class.java)
+                                if (mainModel != null) {
+                                    val paymentModel = mainModel.paymentModel
+                                    if (paymentModel != null) {
+                                        if (isOneTime) {
+                                            isOneTime = false
+                                            TaskRepository(this@HomeActivity).clearDataBase()
+                                        }
+                                        with(paymentModel) {
+                                            TaskRepository(this@HomeActivity).insertTask(
+                                                TaskDataTable(mainModel.uniqueKey, clientName, dateInMillis, payAmount,
+                                                    chequeNumber, payStatus, preDays)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            FetchAllTaskAsync().execute()
+                        } else {
+                            progress.dismiss()
+                        }
+                    }
+                })
+            }
+        } else {
+            FetchAllTaskAsync().execute()
+        }
+    }
+
+    inner class FetchAllTaskAsync : AsyncTask<Void, Void, List<TaskDataTable>>() {
+        override fun doInBackground(vararg params: Void?): List<TaskDataTable> {
+            return TaskRepository(this@HomeActivity).queryAllTask() as ArrayList<TaskDataTable>
+        }
+
+        override fun onPostExecute(result: List<TaskDataTable>?) {
+            super.onPostExecute(result)
+            if (result != null && result.isNotEmpty()) {
+                for (element in result.iterator()) {
+                    with(element){
+                        if (taskCompleted) {
+                            /*TODO: PAID*/
+                            totalPaidSum += amount.toInt()
+                        } else {
+                            /*TODO: PAYABLE*/
+                            totalPayableSum += amount.toInt()
+                        }
+                    }
+                }
+            }
+            progress.dismiss()
+            homeModelList.add(HomeModel("Payable\nAmount", totalPayableSum.toString().plus(" /-")))
+            homeModelList.add(HomeModel("Paid\nAmount", totalPaidSum.toString().plus(" /-")))
+            fragmentLauncher()
+        }
+    }
+
+    override fun payActionListener(slNo : Int) {
+        clearBackStack()
+        when(slNo) {
+            -1 -> {
+                startActivityForResult(
+                    Intent(this, AddTaskActivity::class.java), ConstantUtils.PAY_LIST_CODE
+                )
+            }
+
+            else -> {
+                startActivityForResult(
+                    Intent(this, AddTaskActivity::class.java)
+                        .putExtra(ConstantUtils.TASK_SLNO, slNo), ConstantUtils.PAY_LIST_CODE
+                )
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == ConstantUtils.PAY_LIST_CODE && FRAGMENT_POSITION == 1) {
+            FRAGMENT_POSITION = 1
+            getPayAccountDetailsFromFireBase()
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

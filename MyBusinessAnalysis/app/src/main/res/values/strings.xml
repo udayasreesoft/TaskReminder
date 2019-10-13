@@ -33,11 +33,13 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="outlet">Outlet</string>
+    <string name="outlet">Outlet Details</string>
     <string name="outlet_name">Outlet Name</string>
     <string name="contact_number">Outlet Contact</string>
     <string name="outlet_zipcode">Outlet Zipcode</string>
     <string name="outlet_logo_image">Outlet Logo</string>
     <string name="outlet_banner_image">Outlet Banner</string>
     <string name="save_outlet">Save Outlet</string>
+    <string name="edit">Edit</string>
+    <string name="outlet_address">Outlet Address</string>
 </resources>

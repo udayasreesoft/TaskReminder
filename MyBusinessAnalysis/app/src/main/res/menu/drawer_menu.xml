@@ -26,11 +26,6 @@
                 android:id="@+id/menu_drawable_purchase"
                 android:icon="@drawable/ic_purchase_36"
                 android:title="@string/purchase" />
-
-            <item
-                android:id="@+id/menu_drawable_availablestock"
-                android:icon="@drawable/ic_availablestock_36"
-                android:title="@string/available_stock" />
         </menu>
     </item>
 

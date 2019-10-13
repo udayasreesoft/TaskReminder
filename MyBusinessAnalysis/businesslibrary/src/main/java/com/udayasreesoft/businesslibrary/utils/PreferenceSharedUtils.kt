@@ -17,6 +17,9 @@ class PreferenceSharedUtils(val context: Context) {
     private val user_signin_code_firebase = "FIRE_BASE_CODE"
     private val user_confirmation_status = "USER_CONFIRMATION_STATUS"
     private val user_admin_status = "USER_ADMIN_STATUS"
+    private val outlet_logo_url = "OUTLET_LOGO_URL"
+    private val outlet_banner_url = "OUTLET_BANNER_URL"
+    private val pay_update_version = "PAY_UPDATE_VERSION"
 
     @Synchronized
     fun getInstance() : PreferenceSharedUtils{
@@ -96,6 +99,30 @@ class PreferenceSharedUtils(val context: Context) {
 
     fun getAdminStatus() : Boolean {
         return sharedPreferences.getBoolean(user_admin_status, false)
+    }
+
+    fun setOutletLogoUrl(url : String) {
+        sharedPreferences.edit()?.putString(outlet_logo_url, url)?.apply()
+    }
+
+    fun getOutletLogoUrl() : String? {
+        return sharedPreferences.getString(outlet_logo_url, ConstantUtils.DEFAULT_LOGO)
+    }
+
+    fun setOutletBannerUrl(url : String) {
+        sharedPreferences.edit()?.putString(outlet_banner_url, url)?.apply()
+    }
+
+    fun getOutletBannerUrl() : String? {
+        return sharedPreferences.getString(outlet_banner_url, ConstantUtils.DEFAULT_BANNER)
+    }
+
+    fun setPayVersionUpdate(version : Float) {
+        sharedPreferences.edit()?.putFloat(pay_update_version, version)?.apply()
+    }
+
+    fun getPayVersionUpdate() : Float? {
+        return sharedPreferences.getFloat(pay_update_version, 0.0f)
     }
 
     fun clearAlarmIDPreference() {

@@ -13,6 +13,9 @@ public interface TaskDao {
     @Insert
     void insertTask(TaskDataTable taskDataTable);
 
+    @Query("SELECT * FROM TaskDataTable ORDER BY date_in_millis ASC")
+    List<TaskDataTable> fetchAllTasks();
+
     @Query("SELECT * FROM TaskDataTable WHERE status =:isStatus ORDER BY date_in_millis ASC")
     List<TaskDataTable> fetchTasks(boolean isStatus);
 
@@ -33,4 +36,7 @@ public interface TaskDao {
 
     @Insert
     void insertCompanyName(CompanyNamesTable companyNamesTable);
+
+    @Query("DELETE FROM TaskDataTable")
+    void deleteDataBaseTable();
 }
