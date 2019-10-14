@@ -17,12 +17,12 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
-class PayTaskAdapter(
+class PaymentTaskAdapter(
     private val context: Context,
     private val taskList: ArrayList<TaskDataTable>,
     val taskInterface: TaskInterface
 ) :
-    RecyclerView.Adapter<PayTaskAdapter.TaskHolder>() {
+    RecyclerView.Adapter<PaymentTaskAdapter.TaskHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, position: Int): TaskHolder {
         return TaskHolder(LayoutInflater.from(parent.context).inflate(R.layout.adapter_list_layout, parent, false))

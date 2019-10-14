@@ -42,4 +42,6 @@
     <string name="save_outlet">Save Outlet</string>
     <string name="edit">Edit</string>
     <string name="outlet_address">Outlet Address</string>
+    <string name="payable">Payable</string>
+    <string name="client_name">Client Name</string>
 </resources>

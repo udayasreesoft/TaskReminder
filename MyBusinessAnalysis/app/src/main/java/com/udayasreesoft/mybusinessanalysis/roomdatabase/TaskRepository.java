@@ -79,12 +79,8 @@ public class TaskRepository {
     }
 
     public void clearDataBase() {
-        new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... voids) {
-                databasePersistence.daoAccess().deleteDataBaseTable();
-                return null;
-            }
-        };
+        databasePersistence.isOpen();
+        databasePersistence.clearAllTables();
+        databasePersistence.close();
     }
 }

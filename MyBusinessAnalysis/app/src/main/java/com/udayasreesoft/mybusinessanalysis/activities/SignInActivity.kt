@@ -1,5 +1,6 @@
 package com.udayasreesoft.mybusinessanalysis.activities
 
+import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.Point
 import android.graphics.Typeface
@@ -96,6 +97,19 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
         progress.setMessage("Connection to server. Please wait until process finish...")
         progress.build()
 
+        if (!AppUtils.networkConnectivityCheck(this)) {
+            val build = AlertDialog.Builder(this)
+                .setTitle("Internet Connectivity")
+                .setMessage("Required internet connectivity to continue")
+                .setCancelable(false)
+                .setPositiveButton("Exit"
+                ) { dialog, _ ->
+                    dialog?.dismiss()
+                    finishAffinity()
+                }
+            build.create().show()
+        }
+
         readOutletToFireBase()
     }
 
@@ -118,27 +132,30 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                             val preferenceSharedUtils =
                                 PreferenceSharedUtils(this@SignInActivity).getInstance()
                             with(model) {
-                                preferenceSharedUtils.setUserName(userName)
-                                preferenceSharedUtils.setMobileNumber(userMobile)
-                                preferenceSharedUtils.setOutletName(userOutlet)
-                                preferenceSharedUtils.setSignInCode(verificationCode)
-                                preferenceSharedUtils.setUserConfirmationStatus(codeVerified)
-                                preferenceSharedUtils.setUserFireBaseChildId(userId)
-                                preferenceSharedUtils.setAdminStatus(admin)
-
-                                loginUserName.setText("")
-                                loginMobile.setText("")
-                                loginOutletName.setText("")
-                                progress.dismiss()
-                                if (isDialogVerified) {
-                                    startActivity(
-                                        android.content.Intent(
-                                            this@SignInActivity,
-                                            HomeActivity::class.java
+                                if (userSignInModel.userOutlet == userOutlet && userSignInModel.userName == userName) {
+                                    preferenceSharedUtils.setUserName(userName)
+                                    preferenceSharedUtils.setMobileNumber(userMobile)
+                                    preferenceSharedUtils.setOutletName(userOutlet)
+                                    preferenceSharedUtils.setSignInCode(verificationCode)
+                                    preferenceSharedUtils.setUserConfirmationStatus(codeVerified)
+                                    preferenceSharedUtils.setUserFireBaseChildId(userId)
+                                    preferenceSharedUtils.setAdminStatus(admin)
+                                    isDialogVerified = codeVerified
+                                    loginUserName.setText("")
+                                    loginMobile.setText("")
+                                    loginOutletName.setText("")
+                                    progress.dismiss()
+                                    if (isDialogVerified) {
+                                        preferenceSharedUtils.setUserSignInStatus(true)
+                                        startActivity(
+                                            android.content.Intent(
+                                                this@SignInActivity,
+                                                HomeActivity::class.java
+                                            )
                                         )
-                                    )
-                                } else {
-                                    confirmationCodeAlert()
+                                    } else {
+                                        confirmationCodeAlert()
+                                    }
                                 }
                             }
                         }
@@ -265,14 +282,14 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                     with (preferenceSharedUtils) {
                         writeToFireBase(
                             UserSignInModel(
-                            getUserFireBaseChildId(),
+                                getUserFireBaseChildId(),
                                 getUserName(),
                                 getMobileNumber(),
                                 getOutletName(),
                                 getSignInCode(),
                                 true,
                                 getAdminStatus()
-                        )
+                            )
                         )
                     }
                 } else {

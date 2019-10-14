@@ -1,32 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".fragments.UserClientsFragment">
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/frag_user_client_recycler_id"
-        android:layout_weight="9"
+    <ListView
+        android:id="@+id/frag_client_listview_id"
+        android:layout_above="@+id/frag_client_editor_layout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"/>
+        android:layout_height="match_parent"/>
     <LinearLayout
-        android:layout_weight="1"
-        android:weightSum="5"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
+        android:visibility="gone"
+        android:id="@+id/frag_client_editor_layout"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:layout_alignParentBottom="true"
         android:layout_width="match_parent"
-        android:layout_height="0dp">
-        <EditText
-            android:layout_weight="4"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"/>
-        <Button
-            android:text="@string/add_task"
-            android:layout_weight="1"
-            android:textColor="@android:color/white"
-            android:background="@color/colorAccent"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content">
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <EditText
+                android:id="@+id/frag_client_edittext_id"
+                android:hint="@string/client_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </android.support.design.widget.TextInputLayout>
+        <LinearLayout
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <Button
+                android:id="@+id/frag_client_cancel_id"
+                android:text="Cancel"
+                android:inputType="text"
+                android:textColor="@android:color/white"
+                android:background="@android:color/darker_gray"
+                android:layout_marginEnd="20dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            <Button
+                android:id="@+id/frag_client_save_id"
+                android:text="Save"
+                android:inputType="text"
+                android:textColor="@android:color/white"
+                android:background="@android:color/darker_gray"
+                android:layout_marginStart="20dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/frag_client_fab_id"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="16dp"
+        android:src="@android:drawable/ic_input_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+</RelativeLayout>

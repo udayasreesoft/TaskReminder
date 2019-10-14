@@ -1,16 +1,17 @@
 package com.udayasreesoft.businesslibrary.models;
 
 public class UserSignInModel {
-    private String userId, userName, userMobile, userOutlet, verificationCode;
+    private String userId, userName, userMobile, /*userPassword,*/ userOutlet, verificationCode;
     private boolean isCodeVerified, isAdmin;
 
     public UserSignInModel() {
     }
 
-    public UserSignInModel(String userId, String userName, String userMobile, String userOutlet, String verificationCode, boolean isCodeVerified, boolean isAdmin) {
+    public UserSignInModel(String userId, String userName, String userMobile, /*String userPassword,*/ String userOutlet, String verificationCode, boolean isCodeVerified, boolean isAdmin) {
         this.userId = userId;
         this.userName = userName;
         this.userMobile = userMobile;
+        /*this.userPassword = userPassword;*/
         this.userOutlet = userOutlet;
         this.verificationCode = verificationCode;
         this.isCodeVerified = isCodeVerified;
@@ -40,6 +41,14 @@ public class UserSignInModel {
     public void setUserMobile(String userMobile) {
         this.userMobile = userMobile;
     }
+
+    /*public String getUserPassword() {
+        return userPassword;
+    }
+
+    public void setUserPassword(String userPassword) {
+        this.userPassword = userPassword;
+    }*/
 
     public String getUserOutlet() {
         return userOutlet;

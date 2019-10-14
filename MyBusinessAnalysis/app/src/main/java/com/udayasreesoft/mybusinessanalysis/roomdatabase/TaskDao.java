@@ -36,7 +36,4 @@ public interface TaskDao {
 
     @Insert
     void insertCompanyName(CompanyNamesTable companyNamesTable);
-
-    @Query("DELETE FROM TaskDataTable")
-    void deleteDataBaseTable();
 }

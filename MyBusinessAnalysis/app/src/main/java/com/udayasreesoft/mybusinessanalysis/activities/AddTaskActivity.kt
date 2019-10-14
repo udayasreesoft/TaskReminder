@@ -29,7 +29,6 @@ import kotlin.collections.ArrayList
 
 @SuppressLint("StaticFieldLeak")
 class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
-
     private lateinit var preferenceSharedUtils: PreferenceSharedUtils
     private var _modifyTaskDataTable: TaskDataTable? = null
     private lateinit var progress: CustomProgressDialog
@@ -43,7 +42,7 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
     private var _payableAmount: String = ""
 
     private var _uniqueKeys = ""
-    private lateinit var clientNames : ArrayList<String>
+    private lateinit var clientsName : ArrayList<String>
 
     private lateinit var title: TextView
     private lateinit var companyName: AutoCompleteTextView
@@ -81,7 +80,8 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
         remindTaskDaysSpinner()
 
         title.typeface = Typeface.createFromAsset(assets, "fonts/seasrn.ttf")
-        if (!getIntentDates()) {
+
+        if(!getIntentDates()) {
             readClientsFromFireBase("NA")
         }
     }
@@ -164,27 +164,9 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
         datePicker.show()
     }
 
-    private fun writeClientToFireBase(client: String) {
-        if (client.isNotEmpty() && AppUtils.networkConnectivityCheck(this@AddTaskActivity)) {
-            val outletNameForDB = preferenceSharedUtils.getOutletName()
-            if (outletNameForDB != null && outletNameForDB.isNotEmpty()
-                && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
-            ) {
-                val model = BusinessOutletModel(client)
-                FirebaseDatabase.getInstance()
-                    .getReference(outletNameForDB)
-                    .child(ConstantUtils.CLIENT)
-                    .push()
-                    .setValue(model)
-
-                clientNames.clear()
-            }
-        }
-    }
-
     private fun readClientsFromFireBase(name : String) {
         if (AppUtils.networkConnectivityCheck(this@AddTaskActivity)) {
-            clientNames = ArrayList()
+            clientsName = ArrayList()
             val outletNameForDB = preferenceSharedUtils.getOutletName()
             if (outletNameForDB != null && outletNameForDB.isNotEmpty()
                 && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
@@ -201,14 +183,15 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
 
                     override fun onDataChange(dataSnapShot: DataSnapshot) {
                         if (dataSnapShot.exists()) {
-                            for (element in dataSnapShot.children) {
-                                val model = dataSnapShot.getValue(BusinessOutletModel::class.java)
-                                if (model != null) {
-                                    clientNames.add(model.businessOutlet)
-                                }
+                            val clientList = ArrayList<BusinessOutletModel>()
+                            for(ds in dataSnapShot.children) {
+                                clientList.add(ds.getValue(BusinessOutletModel::class.java)!!)
                             }
+                            for (element in clientList) {
+                                clientsName.add(element.businessOutlet)
+                            }
+                            setupClientTextView(name)
                             progress.dismiss()
-                            setupClientTextView(clientNames, name)
                         } else {
                             progress.dismiss()
                         }
@@ -218,26 +201,43 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun setupClientTextView(clientNames : List<String>?, name : String) {
-        if (clientNames != null && clientNames.isNotEmpty()) {
-            val arrayAdapter = ArrayAdapter(this, android.R.layout.select_dialog_item, clientNames)
+    private fun setupClientTextView(name : String) {
+        if (clientsName.isNotEmpty()) {
+            val arrayAdapter = ArrayAdapter(this, android.R.layout.select_dialog_item, clientsName)
             companyName.threshold = 1
             arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             companyName.setAdapter(arrayAdapter)
-
             companyName.onItemClickListener =
                 AdapterView.OnItemClickListener { _, _, position, _ ->
                     _companyName = arrayAdapter.getItem(position)!!
                 }
-
+            arrayAdapter.notifyDataSetChanged()
             if (name != "NA") {
-                for (i in clientNames.indices) {
-                    if (clientNames[i] == name) {
+                for (i in clientsName.indices) {
+                    if (clientsName[i] == name) {
                         companyName.setText(name)
                         _companyName = name
                         break
                     }
                 }
+            }
+        }
+    }
+
+    private fun writeClientToFireBase(client: String) {
+        if (client.isNotEmpty() && AppUtils.networkConnectivityCheck(this@AddTaskActivity)) {
+            val outletNameForDB = preferenceSharedUtils.getOutletName()
+            if (outletNameForDB != null && outletNameForDB.isNotEmpty()
+                && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
+            ) {
+                val model = BusinessOutletModel(client)
+                FirebaseDatabase.getInstance()
+                    .getReference(outletNameForDB)
+                    .child(ConstantUtils.CLIENT)
+                    .push()
+                    .setValue(model)
+
+                clientsName.clear()
             }
         }
     }
@@ -253,6 +253,7 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
                     .child(ConstantUtils.PAYMENT)
                     .child(paymentModelMain.uniqueKey)
                     .setValue(paymentModelMain)
+
             }
         }
     }
@@ -264,7 +265,18 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
         }
         if (_companyName.isEmpty()) {
             _companyName = companyName.text.toString()
-            writeClientToFireBase(_companyName)
+            if (_companyName.isNotEmpty()) {
+                var isFound = false
+                for (element in clientsName) {
+                    if (_companyName.toLowerCase() == element.toLowerCase()) {
+                        isFound = true
+                        break
+                    }
+                }
+                if (!isFound) {
+                    writeClientToFireBase(_companyName)
+                }
+            }
         }
         _chequeNo = taskChequeNo.text.toString()
         _payableAmount = taskAmount.text.toString()
@@ -272,27 +284,15 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
         if (_selectedDays != selectDays && _companyName.isNotEmpty() && _selectedDateInMills != 0L &&
             _chequeNo.isNotEmpty() && _payableAmount.isNotEmpty()
         ) {
-            if (isInsert) {
-                val paymentModelMain = PaymentModelMain(AppUtils.uniqueKey(), PaymentModel(_companyName,
-                    _payableAmount, _chequeNo, _selectedDateInMills, false, _selectedDays.toInt()))
-
-                writePaymentToFireBase(paymentModelMain)
-            } else {
-                val paymentModelMain = PaymentModelMain(_uniqueKeys, PaymentModel(_companyName,
-                    _payableAmount, _chequeNo, _selectedDateInMills, false, _selectedDays.toInt()))
-
-                writePaymentToFireBase(paymentModelMain)
-
-                _modifyTaskDataTable?.uniqueKey = _uniqueKeys
-                _modifyTaskDataTable?.companyName = _companyName
-                _modifyTaskDataTable?.date = _selectedDateInMills
-                _modifyTaskDataTable?.amount = _payableAmount
-                _modifyTaskDataTable?.chequeNo = _chequeNo
-                _modifyTaskDataTable?.days = _selectedDays.toInt()
-                TaskRepository(this@AddTaskActivity).updateTask(_modifyTaskDataTable)
-            }
+            writePaymentToFireBase(PaymentModelMain(
+                if (_uniqueKeys.isNotEmpty()) {_uniqueKeys} else {AppUtils.uniqueKey()}, PaymentModel(
+                    _companyName,
+                    _payableAmount, _chequeNo, _selectedDateInMills, false, _selectedDays.toInt()
+                )
+            ))
             clearInputs()
-            if (clientNames.isEmpty()) {
+
+            if (clientsName.isEmpty()) {
                 readClientsFromFireBase("NA")
             }
         } else {

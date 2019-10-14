@@ -2,6 +2,7 @@ package com.udayasreesoft.mybusinessanalysis.activities
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -15,7 +16,6 @@ import android.support.design.widget.NavigationView
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
-import android.support.v4.os.ConfigurationCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AlertDialog
@@ -33,7 +33,6 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration
 import com.nostra13.universalimageloader.core.assist.ImageScaleType
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer
 import com.udayasreesoft.businesslibrary.models.HomeModel
-import com.udayasreesoft.businesslibrary.models.PaymentModel
 import com.udayasreesoft.businesslibrary.models.PaymentModelMain
 import com.udayasreesoft.businesslibrary.utils.AppUtils
 import com.udayasreesoft.businesslibrary.utils.ConstantUtils
@@ -41,14 +40,12 @@ import com.udayasreesoft.businesslibrary.utils.CustomProgressDialog
 import com.udayasreesoft.businesslibrary.utils.PreferenceSharedUtils
 import com.udayasreesoft.mybusinessanalysis.R
 import com.udayasreesoft.mybusinessanalysis.fragments.*
-import com.udayasreesoft.mybusinessanalysis.fragments.payableui.PayFragment
-import com.udayasreesoft.mybusinessanalysis.fragments.payableui.UserPayableFragment
+import com.udayasreesoft.mybusinessanalysis.fragments.UserPaymentFragment
 import com.udayasreesoft.mybusinessanalysis.roomdatabase.TaskDataTable
 import com.udayasreesoft.mybusinessanalysis.roomdatabase.TaskRepository
-import java.text.NumberFormat
 
 @SuppressLint("StaticFieldLeak")
-class HomeActivity : AppCompatActivity(), PayFragment.PayInterface {
+class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface {
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navigationView: NavigationView
     private lateinit var navAppBar: AppBarLayout
@@ -64,6 +61,7 @@ class HomeActivity : AppCompatActivity(), PayFragment.PayInterface {
     private lateinit var homeModelList : ArrayList<HomeModel>
     private var totalPaidSum = 0
     private var totalPayableSum = 0
+    private var isOneTime = true
 
     private lateinit var preferenceSharedUtils: PreferenceSharedUtils
     private lateinit var progress : CustomProgressDialog
@@ -171,7 +169,7 @@ class HomeActivity : AppCompatActivity(), PayFragment.PayInterface {
             when (menu.itemId) {
                 R.id.menu_drawable_home -> {
                     FRAGMENT_POSITION = 0
-                    fragmentLauncher()
+                    FetchAllTaskAsync().execute()
                 }
 
                 R.id.menu_drawable_amount -> {
@@ -212,7 +210,7 @@ class HomeActivity : AppCompatActivity(), PayFragment.PayInterface {
             }
 
             1 -> {
-                fragment = UserPayableFragment()
+                fragment = UserPaymentFragment.newInstance(false)
             }
 
             2 -> {
@@ -254,12 +252,43 @@ class HomeActivity : AppCompatActivity(), PayFragment.PayInterface {
         headerView.findViewById<TextView>(R.id.nav_header_outletname).text = preferenceSharedUtils.getOutletName()
     }
 
+    inner class DataBaseInsertDeleteAsync(private val dataSnapShot: DataSnapshot)
+        : AsyncTask<Void, Void, Boolean>() {
+        override fun doInBackground(vararg p0: Void?): Boolean? {
+            for (element in dataSnapShot.children) {
+                val mainModel = element.getValue(PaymentModelMain::class.java)
+                if (mainModel != null) {
+                    val paymentModel = mainModel.paymentModel
+                    if (paymentModel != null) {
+                        if (isOneTime) {
+                            isOneTime = false
+                            TaskRepository(this@HomeActivity).clearDataBase()
+                        }
+                        with(paymentModel) {
+                            TaskRepository(this@HomeActivity).insertTask(
+                                TaskDataTable(mainModel.uniqueKey, clientName, dateInMillis, payAmount,
+                                    chequeNumber, payStatus, preDays)
+                            )
+                        }
+                    }
+                }
+            }
+            return true
+        }
+
+        override fun onPostExecute(result: Boolean?) {
+            super.onPostExecute(result)
+            FetchAllTaskAsync().execute()
+        }
+    }
+
+
     private fun getPayAccountDetailsFromFireBase() {
         if (AppUtils.networkConnectivityCheck(this@HomeActivity)) {
+            progress.show()
             val outletNameForDB = preferenceSharedUtils.getOutletName()
             if (outletNameForDB != null && outletNameForDB.isNotEmpty()
                 && outletNameForDB.isNotBlank() && outletNameForDB != "NA") {
-                progress.show()
                 val fireBaseReference = FirebaseDatabase.getInstance()
                     .getReference(outletNameForDB)
                     .child(ConstantUtils.PAYMENT)
@@ -270,31 +299,16 @@ class HomeActivity : AppCompatActivity(), PayFragment.PayInterface {
                     }
                     override fun onDataChange(dataSnapShot: DataSnapshot) {
                         if (dataSnapShot.exists()) {
-                            var isOneTime = true
-                            for (element in dataSnapShot.children) {
-                                val mainModel = element.getValue(PaymentModelMain::class.java)
-                                if (mainModel != null) {
-                                    val paymentModel = mainModel.paymentModel
-                                    if (paymentModel != null) {
-                                        if (isOneTime) {
-                                            isOneTime = false
-                                            TaskRepository(this@HomeActivity).clearDataBase()
-                                        }
-                                        with(paymentModel) {
-                                            TaskRepository(this@HomeActivity).insertTask(
-                                                TaskDataTable(mainModel.uniqueKey, clientName, dateInMillis, payAmount,
-                                                    chequeNumber, payStatus, preDays)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                            FetchAllTaskAsync().execute()
+                            isOneTime = true
+                            DataBaseInsertDeleteAsync(dataSnapShot).execute()
                         } else {
                             progress.dismiss()
+                            FetchAllTaskAsync().execute()
                         }
                     }
                 })
+            } else {
+                FetchAllTaskAsync().execute()
             }
         } else {
             FetchAllTaskAsync().execute()
@@ -309,6 +323,8 @@ class HomeActivity : AppCompatActivity(), PayFragment.PayInterface {
         override fun onPostExecute(result: List<TaskDataTable>?) {
             super.onPostExecute(result)
             if (result != null && result.isNotEmpty()) {
+                totalPaidSum = 0
+                totalPayableSum = 0
                 for (element in result.iterator()) {
                     with(element){
                         if (taskCompleted) {
@@ -322,8 +338,9 @@ class HomeActivity : AppCompatActivity(), PayFragment.PayInterface {
                 }
             }
             progress.dismiss()
-            homeModelList.add(HomeModel("Payable\nAmount", totalPayableSum.toString().plus(" /-")))
-            homeModelList.add(HomeModel("Paid\nAmount", totalPaidSum.toString().plus(" /-")))
+            homeModelList.clear()
+            homeModelList.add(HomeModel("Payable Amount", totalPayableSum))
+            homeModelList.add(HomeModel("Paid Amount", totalPaidSum))
             fragmentLauncher()
         }
     }
@@ -348,7 +365,7 @@ class HomeActivity : AppCompatActivity(), PayFragment.PayInterface {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == ConstantUtils.PAY_LIST_CODE && FRAGMENT_POSITION == 1) {
+        if (requestCode == ConstantUtils.PAY_LIST_CODE && resultCode == Activity.RESULT_OK && FRAGMENT_POSITION == 1) {
             FRAGMENT_POSITION = 1
             getPayAccountDetailsFromFireBase()
         }
@@ -393,7 +410,7 @@ class HomeActivity : AppCompatActivity(), PayFragment.PayInterface {
         if (FRAGMENT_POSITION > 0) {
             FRAGMENT_POSITION = 0
             clearBackStack()
-            fragmentLauncher()
+            FetchAllTaskAsync().execute()
         } else {
             val intent = Intent(Intent.ACTION_MAIN)
             intent.addCategory(Intent.CATEGORY_HOME)
