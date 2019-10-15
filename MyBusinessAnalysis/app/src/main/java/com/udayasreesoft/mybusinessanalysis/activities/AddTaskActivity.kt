@@ -23,6 +23,7 @@ import com.udayasreesoft.businesslibrary.utils.PreferenceSharedUtils
 import com.udayasreesoft.mybusinessanalysis.R
 import com.udayasreesoft.mybusinessanalysis.roomdatabase.TaskDataTable
 import com.udayasreesoft.mybusinessanalysis.roomdatabase.TaskRepository
+import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -40,9 +41,9 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
     private var _selectedDays: String = ""
     private var _chequeNo: String = ""
     private var _payableAmount: String = ""
-
+    private var isModify = false
     private var _uniqueKeys = ""
-    private lateinit var clientsName : ArrayList<String>
+    private lateinit var clientsName: ArrayList<String>
 
     private lateinit var title: TextView
     private lateinit var companyName: AutoCompleteTextView
@@ -81,7 +82,8 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
 
         title.typeface = Typeface.createFromAsset(assets, "fonts/seasrn.ttf")
 
-        if(!getIntentDates()) {
+        if (!getIntentDates()) {
+            isModify = false
             readClientsFromFireBase("NA")
         }
     }
@@ -90,6 +92,7 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
         val bundle = intent.extras
         if (bundle != null) {
             if (bundle.containsKey(ConstantUtils.TASK_SLNO)) {
+                isModify = true
                 MenuTaskAsync(bundle.getInt("task_slno", -1)).execute()
             }
             return true
@@ -164,7 +167,7 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
         datePicker.show()
     }
 
-    private fun readClientsFromFireBase(name : String) {
+    private fun readClientsFromFireBase(name: String) {
         if (AppUtils.networkConnectivityCheck(this@AddTaskActivity)) {
             clientsName = ArrayList()
             val outletNameForDB = preferenceSharedUtils.getOutletName()
@@ -184,7 +187,7 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
                     override fun onDataChange(dataSnapShot: DataSnapshot) {
                         if (dataSnapShot.exists()) {
                             val clientList = ArrayList<BusinessOutletModel>()
-                            for(ds in dataSnapShot.children) {
+                            for (ds in dataSnapShot.children) {
                                 clientList.add(ds.getValue(BusinessOutletModel::class.java)!!)
                             }
                             for (element in clientList) {
@@ -201,7 +204,7 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun setupClientTextView(name : String) {
+    private fun setupClientTextView(name: String) {
         if (clientsName.isNotEmpty()) {
             val arrayAdapter = ArrayAdapter(this, android.R.layout.select_dialog_item, clientsName)
             companyName.threshold = 1
@@ -253,7 +256,38 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
                     .child(ConstantUtils.PAYMENT)
                     .child(paymentModelMain.uniqueKey)
                     .setValue(paymentModelMain)
+                if (!isModify) {
+                    writePaymentVersionToFireBase(outletNameForDB)
+                }
+            }
+        }
+    }
 
+    private fun writePaymentVersionToFireBase(outletNameForDB: String) {
+        if (AppUtils.networkConnectivityCheck(this@AddTaskActivity) && outletNameForDB.isNotEmpty()) {
+            if (outletNameForDB != null && outletNameForDB.isNotEmpty()
+                && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
+            ) {
+
+                val fireBaseReference = FirebaseDatabase.getInstance()
+                    .getReference(outletNameForDB)
+                    .child(ConstantUtils.PAYMENT_VERSION)
+
+                fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onCancelled(error: DatabaseError) {
+                        progress.dismiss()
+                    }
+
+                    override fun onDataChange(dataSnapShot: DataSnapshot) {
+                        if (dataSnapShot.exists()) {
+                            var version : Double = dataSnapShot.getValue(Double::class.java)!!
+                            version += 0.01
+                            val bigDecimal = BigDecimal(version).setScale(2, BigDecimal.ROUND_HALF_UP)
+                            fireBaseReference.setValue(bigDecimal.toDouble())
+                        }
+                        progress.dismiss()
+                    }
+                })
             }
         }
     }
@@ -284,12 +318,18 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
         if (_selectedDays != selectDays && _companyName.isNotEmpty() && _selectedDateInMills != 0L &&
             _chequeNo.isNotEmpty() && _payableAmount.isNotEmpty()
         ) {
-            writePaymentToFireBase(PaymentModelMain(
-                if (_uniqueKeys.isNotEmpty()) {_uniqueKeys} else {AppUtils.uniqueKey()}, PaymentModel(
-                    _companyName,
-                    _payableAmount, _chequeNo, _selectedDateInMills, false, _selectedDays.toInt()
+            writePaymentToFireBase(
+                PaymentModelMain(
+                    if (_uniqueKeys.isNotEmpty()) {
+                        _uniqueKeys
+                    } else {
+                        AppUtils.uniqueKey()
+                    }, PaymentModel(
+                        _companyName,
+                        _payableAmount, _chequeNo, _selectedDateInMills, false, _selectedDays.toInt()
+                    )
                 )
-            ))
+            )
             clearInputs()
 
             if (clientsName.isEmpty()) {

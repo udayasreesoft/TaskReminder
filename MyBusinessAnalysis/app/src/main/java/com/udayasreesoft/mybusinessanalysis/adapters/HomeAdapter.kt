@@ -31,7 +31,15 @@ class HomeAdapter(val context : Context,val homeModelList : List<HomeModel>, val
         }
     }
 
-    inner class HomeHolder(view : View) : RecyclerView.ViewHolder(view) {
+    inner class HomeHolder(view : View) : RecyclerView.ViewHolder(view), View.OnClickListener {
+        override fun onClick(v: View?) {
+            when(v?.id) {
+                R.id.row_home_layout_id -> {
+                    homeInterface.homeListener(adapterPosition)
+                }
+            }
+        }
+
         val homeLayout = view.findViewById<LinearLayout>(R.id.row_home_layout_id)
         val homeTitle = view.findViewById<TextView>(R.id.row_home_title_id)
         val homeTotal = view.findViewById<TextView>(R.id.row_home_total_id)
@@ -41,10 +49,12 @@ class HomeAdapter(val context : Context,val homeModelList : List<HomeModel>, val
             homeTotal.typeface = kendaltype
             homeLayout.layoutParams.width = (AppUtils.SCREEN_WIDTH * 0.49).toInt()
             homeLayout.layoutParams.height = (AppUtils.SCREEN_WIDTH * 0.30).toInt()
+
+            homeLayout.setOnClickListener(this)
         }
     }
 
     interface HomeInterface {
-        fun homeListener()
+        fun homeListener(position : Int)
     }
 }

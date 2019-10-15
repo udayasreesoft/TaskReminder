@@ -22,5 +22,6 @@ class ConstantUtils {
         @JvmField val CLIENT = "Clients"
         @JvmField val COMPANY= "Company"
         @JvmField val PAYMENT = "Payment"
+        @JvmField val PAYMENT_VERSION = "Payment Version"
     }
 }

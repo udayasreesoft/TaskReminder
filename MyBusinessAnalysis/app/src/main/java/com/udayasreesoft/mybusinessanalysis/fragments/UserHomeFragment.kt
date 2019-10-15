@@ -1,6 +1,7 @@
 package com.udayasreesoft.mybusinessanalysis.fragments
 
 
+import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.GridLayoutManager
@@ -18,6 +19,16 @@ import com.udayasreesoft.mybusinessanalysis.adapters.HomeAdapter
 class UserHomeFragment : Fragment(), HomeAdapter.HomeInterface {
 
     private lateinit var homeRecyclerView : RecyclerView
+    private lateinit var userHomeInterface: UserHomeInterface
+
+    override fun onAttach(context: Context?) {
+        super.onAttach(context)
+        try {
+            userHomeInterface = context as UserHomeInterface
+        } catch (e : ClassCastException) {
+            throw ClassCastException(context.toString().plus(" must implement UserHomeFragment"))
+        }
+    }
 
     companion object {
         fun newInstance(homeModelList: ArrayList<HomeModel>) : Fragment {
@@ -59,7 +70,11 @@ class UserHomeFragment : Fragment(), HomeAdapter.HomeInterface {
         }
     }
 
-    override fun homeListener() {
+    override fun homeListener(position : Int) {
+        userHomeInterface.homeSelectListener(position)
+    }
 
+    interface UserHomeInterface {
+        fun homeSelectListener(position : Int)
     }
 }

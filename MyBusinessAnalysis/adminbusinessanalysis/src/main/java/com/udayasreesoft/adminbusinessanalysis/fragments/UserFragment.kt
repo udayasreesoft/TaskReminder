@@ -32,7 +32,7 @@ class UserFragment : Fragment(), View.OnClickListener {
     private lateinit var userNameText: EditText
     private lateinit var userMobileText: EditText
     private lateinit var userOutletText: AutoCompleteTextView
-    private lateinit var userAddressText: EditText
+    private lateinit var userAddressText: AutoCompleteTextView
     private lateinit var userPinCodeBtn: ImageView
     private lateinit var userAdminCodeText: EditText
     private lateinit var userAddBtn: Button
@@ -205,6 +205,11 @@ class UserFragment : Fragment(), View.OnClickListener {
                     .child(userMobile)
                     .setValue(userSignInModel) { error, _ ->
                         if (error == null) {
+                            FirebaseDatabase.getInstance()
+                                .getReference(userSignInModel.userOutlet)
+                                .child(ConstantUtils.PAYMENT_VERSION)
+                                .setValue(0.0)
+
                             userNameText.setText("")
                             userMobileText.setText("")
                             userOutletText.setText("")
@@ -274,13 +279,13 @@ class UserFragment : Fragment(), View.OnClickListener {
     private fun setupAddressTextView(addressList : List<String>?) {
         if (addressList != null && addressList.isNotEmpty()) {
             val arrayAdapter = ArrayAdapter(context!!, android.R.layout.simple_list_item_1, android.R.id.text1, addressList)
-            userOutletText.threshold = 0
+            userAddressText.threshold = 0
             arrayAdapter.setDropDownViewResource(android.R.layout.simple_list_item_1)
-            userOutletText.setAdapter(arrayAdapter)
-            userOutletText.showDropDown()
-            userOutletText.onItemClickListener =
+            userAddressText.setAdapter(arrayAdapter)
+            userAddressText.showDropDown()
+            userAddressText.onItemClickListener =
                 AdapterView.OnItemClickListener { _, _, position, _ ->
-                    userOutletText.setText(arrayAdapter.getItem(position)!!)
+                    userAddressText.setText(arrayAdapter.getItem(position)!!)
                 }
         }
     }
@@ -327,10 +332,10 @@ class UserFragment : Fragment(), View.OnClickListener {
                     progress.show()
                     val userSignInModel =
                         UserSignInModel(
+                            AppUtils.fireBaseChildId(outletCode),
                             userName,
                             mobile,
                             outletName,
-                            "$outletName, \n$address",
                             adminCode,
                             false,
                             true

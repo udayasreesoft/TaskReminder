@@ -45,7 +45,7 @@ import com.udayasreesoft.mybusinessanalysis.roomdatabase.TaskDataTable
 import com.udayasreesoft.mybusinessanalysis.roomdatabase.TaskRepository
 
 @SuppressLint("StaticFieldLeak")
-class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface {
+class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, UserHomeFragment.UserHomeInterface {
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navigationView: NavigationView
     private lateinit var navAppBar: AppBarLayout
@@ -63,13 +63,14 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface {
     private var totalPayableSum = 0
     private var isOneTime = true
 
+    private var isPaid = false
+
     private lateinit var preferenceSharedUtils: PreferenceSharedUtils
     private lateinit var progress : CustomProgressDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
-
         initView()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             setupMPermissions()
@@ -95,7 +96,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface {
         setupImageLoader()
         setupNavigationDrawer()
         setupNavigationHeader()
-        getPayAccountDetailsFromFireBase()
+        readPaymentVersionToFireBase()
     }
 
     private fun setupMPermissions() {
@@ -162,7 +163,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface {
 
         val navMenu = navigationView.menu
         if (!preferenceSharedUtils.getAdminStatus()) {
-            navMenu.findItem(R.id.menu_outlet_setup_client).setVisible(false)
+            navMenu.findItem(R.id.menu_outlet_setup_client).isVisible = false
         }
 
         navigationView.setNavigationItemSelectedListener { menu ->
@@ -174,6 +175,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface {
 
                 R.id.menu_drawable_amount -> {
                     FRAGMENT_POSITION = 1
+                    isPaid = false
                     fragmentLauncher()
                 }
 
@@ -203,35 +205,46 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface {
     }
 
     private fun fragmentLauncher() {
+        clearBackStack()
         var fragment: Fragment? = null
         when (FRAGMENT_POSITION) {
             0 -> {
+                navToolbar.title = "Home"
                 fragment = UserHomeFragment.newInstance(homeModelList)
             }
 
             1 -> {
-                fragment = UserPaymentFragment.newInstance(false)
+                navToolbar.title = "Payable/Paid"
+                fragment = UserPaymentFragment.newInstance(isPaid)
             }
 
             2 -> {
+                navToolbar.title = "Business"
                 fragment = UserBusinessFragment()
             }
 
             3 -> {
+                navToolbar.title = "Purchase"
                 fragment = UserPurchaseFragment()
             }
 
             4 -> {
+                navToolbar.title = "Outlet"
                 fragment = UserOutletSetupFragment()
             }
 
             5 -> {
+                navToolbar.title = "Clients"
                 fragment = UserClientsFragment()
             }
         }
 
         if (fragment != null) {
             supportFragmentManager.beginTransaction()
+                .setCustomAnimations(R.anim.fragment_slide_left_enter,
+                    R.anim.fragment_slide_left_exit,
+                    R.anim.fragment_slide_right_enter,
+                    R.anim.fragment_slide_right_exit)
                 .replace(R.id.nav_appbar_container_id, fragment)
                 .addToBackStack(fragment::class.java.simpleName)
                 .commit()
@@ -279,6 +292,35 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface {
         override fun onPostExecute(result: Boolean?) {
             super.onPostExecute(result)
             FetchAllTaskAsync().execute()
+        }
+    }
+
+    private fun readPaymentVersionToFireBase() {
+        val outletNameForDB = preferenceSharedUtils.getOutletName()
+        if (AppUtils.networkConnectivityCheck(this@HomeActivity)) {
+            if (outletNameForDB != null && outletNameForDB.isNotEmpty()
+                && outletNameForDB.isNotBlank() && outletNameForDB != "NA") {
+                val fireBaseReference = FirebaseDatabase.getInstance()
+                    .getReference(outletNameForDB)
+                    .child(ConstantUtils.PAYMENT_VERSION)
+
+                fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onCancelled(error: DatabaseError) {
+                        progress.dismiss()
+                    }
+
+                    override fun onDataChange(dataSnapShot: DataSnapshot) {
+                        if (dataSnapShot.exists()) {
+                            val version : Double = dataSnapShot.getValue(Double::class.java)!!
+                            if (version > preferenceSharedUtils.getPayVersionUpdate()?.toDouble()!!) {
+                                preferenceSharedUtils.setPayVersionUpdate(version.toFloat())
+                                getPayAccountDetailsFromFireBase()
+                            }
+                        }
+                        progress.dismiss()
+                    }
+                })
+            }
         }
     }
 
@@ -345,6 +387,26 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface {
         }
     }
 
+    override fun homeSelectListener(position : Int) {
+        when(position) {
+            0 -> {
+                isPaid = false
+                FRAGMENT_POSITION = 1
+                fragmentLauncher()
+            }
+
+            1 -> {
+                isPaid = true
+                FRAGMENT_POSITION = 1
+                fragmentLauncher()
+            }
+
+            else -> {
+
+            }
+        }
+    }
+
     override fun payActionListener(slNo : Int) {
         clearBackStack()
         when(slNo) {
@@ -352,6 +414,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface {
                 startActivityForResult(
                     Intent(this, AddTaskActivity::class.java), ConstantUtils.PAY_LIST_CODE
                 )
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             }
 
             else -> {
@@ -359,6 +422,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface {
                     Intent(this, AddTaskActivity::class.java)
                         .putExtra(ConstantUtils.TASK_SLNO, slNo), ConstantUtils.PAY_LIST_CODE
                 )
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             }
         }
     }
@@ -367,7 +431,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == ConstantUtils.PAY_LIST_CODE && resultCode == Activity.RESULT_OK && FRAGMENT_POSITION == 1) {
             FRAGMENT_POSITION = 1
-            getPayAccountDetailsFromFireBase()
+            readPaymentVersionToFireBase()
         }
     }
 
