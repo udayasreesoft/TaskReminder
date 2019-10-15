@@ -116,6 +116,10 @@ class UserPaymentFragment : Fragment(), View.OnClickListener, PaymentTaskAdapter
         paidLayout.setOnClickListener(this)
         paymentFAB.setOnClickListener(this)
 
+        if (!AppUtils.isAdminStatus) {
+            paymentFAB.hide()
+        }
+
         val args: Bundle? = arguments
         if (args != null) {
             if (args.containsKey("payable_key")) {

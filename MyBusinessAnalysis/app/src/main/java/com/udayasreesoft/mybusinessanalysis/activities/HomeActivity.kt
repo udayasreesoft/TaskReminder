@@ -96,7 +96,11 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
         setupImageLoader()
         setupNavigationDrawer()
         setupNavigationHeader()
-        readPaymentVersionToFireBase()
+        if (AppUtils.networkConnectivityCheck(this)) {
+            readPaymentVersionToFireBase()
+        } else {
+            FetchAllTaskAsync().execute()
+        }
     }
 
     private fun setupMPermissions() {

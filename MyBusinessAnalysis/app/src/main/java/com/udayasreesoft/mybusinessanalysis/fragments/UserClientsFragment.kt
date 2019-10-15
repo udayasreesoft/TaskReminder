@@ -63,6 +63,10 @@ class UserClientsFragment : Fragment(), View.OnClickListener {
         progress.setMessage("Please wait...")
         progress.build()
 
+        if (!AppUtils.isAdminStatus) {
+            clientFAB.hide()
+        }
+
         setUpListView()
         readClientsFromFireBase()
     }

@@ -333,6 +333,7 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
             clearInputs()
 
             if (clientsName.isEmpty()) {
+                isModify = false
                 readClientsFromFireBase("NA")
             }
         } else {
