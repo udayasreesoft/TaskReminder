@@ -233,8 +233,10 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
             }
 
             4 -> {
-                navToolbar.title = "Outlet"
-                fragment = UserOutletSetupFragment()
+                if (AppUtils.networkConnectivityCheck(this)) {
+                    navToolbar.title = "Outlet"
+                    fragment = UserOutletSetupFragment()
+                }
             }
 
             5 -> {
