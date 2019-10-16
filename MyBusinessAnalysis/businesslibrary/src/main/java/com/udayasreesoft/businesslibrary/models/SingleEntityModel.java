@@ -1,12 +1,12 @@
 package com.udayasreesoft.businesslibrary.models;
 
-public class BusinessOutletModel {
+public class SingleEntityModel {
     private String businessOutlet;
 
-    public BusinessOutletModel() {
+    public SingleEntityModel() {
     }
 
-    public BusinessOutletModel(String businessOutlet) {
+    public SingleEntityModel(String businessOutlet) {
         this.businessOutlet = businessOutlet;
     }
 

@@ -76,7 +76,7 @@ class UserPaymentFragment : Fragment(), View.OnClickListener, PaymentTaskAdapter
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_user_payable, container, false)
+        val view = inflater.inflate(R.layout.fragment_user_payment, container, false)
         initView(view)
         return view
     }
@@ -251,8 +251,9 @@ class UserPaymentFragment : Fragment(), View.OnClickListener, PaymentTaskAdapter
                 adapter.notifyDataSetChanged()
                 paymentRecycler.startAnimation(animation)
             } else {
-                paymentEmptyText.visibility = View.VISIBLE
                 paymentRecycler.visibility = View.GONE
+                paymentEmptyText.visibility = View.VISIBLE
+                paymentEmptyText.startAnimation(animation)
             }
             progress.dismiss()
         }

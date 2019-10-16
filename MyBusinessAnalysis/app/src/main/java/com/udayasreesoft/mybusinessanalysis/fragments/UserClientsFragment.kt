@@ -12,7 +12,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.udayasreesoft.businesslibrary.models.BusinessOutletModel
+import com.udayasreesoft.businesslibrary.models.SingleEntityModel
 import com.udayasreesoft.businesslibrary.utils.AppUtils
 import com.udayasreesoft.businesslibrary.utils.ConstantUtils
 import com.udayasreesoft.businesslibrary.utils.CustomProgressDialog
@@ -84,7 +84,7 @@ class UserClientsFragment : Fragment(), View.OnClickListener {
             if (outletNameForDB != null && outletNameForDB.isNotEmpty()
                 && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
             ) {
-                val model = BusinessOutletModel(client)
+                val model = SingleEntityModel(client)
                 FirebaseDatabase.getInstance()
                     .getReference(outletNameForDB)
                     .child(ConstantUtils.CLIENT)
@@ -115,9 +115,9 @@ class UserClientsFragment : Fragment(), View.OnClickListener {
 
                     override fun onDataChange(dataSnapShot: DataSnapshot) {
                         if (dataSnapShot.exists()) {
-                            val clientList = ArrayList<BusinessOutletModel>()
+                            val clientList = ArrayList<SingleEntityModel>()
                             for(ds in dataSnapShot.children) {
-                                clientList.add(ds.getValue(BusinessOutletModel::class.java)!!)
+                                clientList.add(ds.getValue(SingleEntityModel::class.java)!!)
                             }
                             for (i in 0 until clientList.size) {
                                 clientsName.add(" ${i+1}. ${clientList[i].businessOutlet}")

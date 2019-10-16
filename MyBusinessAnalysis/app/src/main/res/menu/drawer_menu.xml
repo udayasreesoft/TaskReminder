@@ -6,7 +6,7 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/menu_drawable_home"
-            android:icon="@drawable/ic_home_menu_36"
+            android:icon="@drawable/ic_home"
             android:title="@string/home" />
     </group>
 
@@ -14,17 +14,17 @@
         <menu>
             <item
                 android:id="@+id/menu_drawable_amount"
-                android:icon="@drawable/ic_currency_36"
+                android:icon="@drawable/ic_payment"
                 android:title="@string/payable_paid_amount" />
 
             <item
                 android:id="@+id/menu_drawable_todaybusiness"
-                android:icon="@drawable/ic_business_36"
+                android:icon="@drawable/ic_business"
                 android:title="@string/today_business" />
 
             <item
                 android:id="@+id/menu_drawable_purchase"
-                android:icon="@drawable/ic_purchase_36"
+                android:icon="@drawable/ic_purchase"
                 android:title="@string/purchase" />
         </menu>
     </item>
@@ -35,12 +35,12 @@
             <menu>
                 <item
                     android:id="@+id/menu_outlet_setup_client"
-                    android:icon="@drawable/ic_clients_36"
+                    android:icon="@drawable/ic_outlet"
                     android:title="@string/outlet_settings" />
 
                 <item
                     android:id="@+id/menu_drawable_client"
-                    android:icon="@drawable/ic_clients_36"
+                    android:icon="@drawable/ic_clients"
                     android:title="@string/clients" />
             </menu>
         </item>

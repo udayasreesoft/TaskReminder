@@ -51,9 +51,8 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
     private lateinit var outletName: EditText
     private lateinit var outletContact: EditText
     private lateinit var outletAddress: AutoCompleteTextView
-    private lateinit var outletZipcode : EditText
+    private lateinit var outletZipcode: EditText
     private lateinit var outletSearch: ImageView
-    private lateinit var outletLogoEdit: TextView
     private lateinit var outletLogoImage: ImageView
     private lateinit var outletBannerEdit: ImageView
     private lateinit var outletBannerImage: ImageView
@@ -67,8 +66,8 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
     private lateinit var preferenceSharedUtils: PreferenceSharedUtils
 
     private var isLogoImage = false
-    private var outletLogoUrl = ""
-    private var outletBannerUrl = ""
+    private var serverLogoUrl = ""
+    private var serverBannerUrl = ""
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -87,7 +86,6 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
         outletZipcode = view.findViewById(R.id.frag_setup_zipcode_id)
         outletSearch = view.findViewById(R.id.frag_setup_search_id)
         outletLogoImage = view.findViewById(R.id.frag_setup_logo_id)
-        outletLogoEdit = view.findViewById(R.id.frag_Setup_edit_logo_id)
         outletBannerEdit = view.findViewById(R.id.frag_setup_edit_banner_id)
         outletBannerImage = view.findViewById(R.id.frag_setup_banner_id)
         outletSave = view.findViewById(R.id.frag_setup_save_btn_id)
@@ -99,7 +97,7 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
 
         outletSave.setOnClickListener(this)
         outletSearch.setOnClickListener(this)
-        outletLogoEdit.setOnClickListener(this)
+        outletLogoImage.setOnClickListener(this)
         outletBannerEdit.setOnClickListener(this)
 
         preferenceSharedUtils = PreferenceSharedUtils(context!!).getInstance()
@@ -191,7 +189,7 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
                 android.R.id.text1,
                 addressList
             )
-            outletAddress.threshold = 0
+            outletAddress.threshold = 1
             arrayAdapter.setDropDownViewResource(android.R.layout.simple_list_item_1)
             outletAddress.setAdapter(arrayAdapter)
             outletAddress.showDropDown()
@@ -254,11 +252,9 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
                 cursor?.close()
 
                 if (isLogoImage) {
-                    val logoUrl = "file://$imagePath"
-                    storeImageToFireBase(logoUrl, outletLogoImage)
+                    storeImageToFireBase("file://$imagePath", outletLogoImage)
                 } else {
-                    val bannerUrl = "file://$imagePath"
-                    storeImageToFireBase(bannerUrl, outletBannerImage)
+                    storeImageToFireBase("file://$imagePath", outletBannerImage)
                 }
             }
         } catch (e: Exception) {
@@ -281,12 +277,12 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
                         loadedImage: Bitmap?
                     ) {
                         val companyName = preferenceSharedUtils.getOutletName() ?: ""
-                        if (companyName.isNotEmpty() && companyName.isNotBlank()) {
+                        if (companyName.isNotEmpty() && companyName.isNotBlank() && companyName != "NA") {
                             progress.show()
                             val ext = url.substring(url.lastIndexOf("."))
                             val storageReference: StorageReference = FirebaseStorage.getInstance()
                                 .getReference(companyName.plus("/"))
-                                .child(ConstantUtils.PROFILES)
+                                .child(ConstantUtils.OUTLET_PROFILE)
                                 .child(
                                     "${companyName}_${if (isLogoImage) {
                                         "Logo"
@@ -299,10 +295,10 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
                                 .addOnSuccessListener { taskSnapShot ->
                                     progress.dismiss()
                                     if (isLogoImage) {
-                                        outletLogoUrl =
+                                        serverLogoUrl =
                                             taskSnapShot.metadata?.reference?.downloadUrl.toString()
                                     } else {
-                                        outletBannerUrl =
+                                        serverBannerUrl =
                                             taskSnapShot.metadata?.reference?.downloadUrl.toString()
                                     }
                                 }
@@ -335,12 +331,14 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
     }
 
     private fun readOutletDetailsFromFireBase() {
-        if (AppUtils.networkConnectivityCheck(context!!)) {
+        val outletNameForDB = preferenceSharedUtils.getOutletName()!!
+        if (AppUtils.networkConnectivityCheck(context!!) && outletNameForDB != null && outletNameForDB.isNotEmpty()
+            && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
+        ) {
             progress.show()
             val fireBaseReference = FirebaseDatabase.getInstance()
-                .getReference(ConstantUtils.DETAILS)
-                .child(ConstantUtils.COMPANY)
-                .child(preferenceSharedUtils.getOutletName()!!)
+                .getReference(outletNameForDB)
+                .child(ConstantUtils.OUTLET_PROFILE)
 
             fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onCancelled(error: DatabaseError) {
@@ -354,11 +352,16 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
                             setModelDataToView(companyModel)
                         }
                     } else {
-                        setModelDataToView(CompanyModel(preferenceSharedUtils.getOutletName(),
-                            "", "", ConstantUtils.DEFAULT_LOGO, ConstantUtils.DEFAULT_BANNER))
+                        setModelDataToView(
+                            CompanyModel(
+                                preferenceSharedUtils.getOutletName(),
+                                "", "", ConstantUtils.DEFAULT_LOGO, ConstantUtils.DEFAULT_BANNER
+                            )
+                        )
                     }
                 }
             })
+
         }
     }
 
@@ -366,74 +369,83 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
         outletName.setText(companyModel.outletName ?: "")
         outletContact.setText(companyModel.outletContact ?: "")
         outletAddress.setText(companyModel.outletAddress ?: "")
+        outletZipcode.setText(companyModel.outletAddress.substring(companyModel.outletAddress.lastIndexOf("-")+1).trim())
         if (AppUtils.networkConnectivityCheck(context!!)) {
 
-            outletLogoUrl = if(companyModel.outletLogo != null && companyModel.outletLogo.isNotEmpty()) {
+            serverLogoUrl = if (companyModel.outletLogo != null && companyModel.outletLogo.isNotEmpty()) {
                 preferenceSharedUtils.setOutletLogoUrl(companyModel.outletLogo)
                 companyModel.outletLogo
-            } else {ConstantUtils.DEFAULT_LOGO}
-            outletBannerUrl = if(companyModel.outletBanner != null && companyModel.outletBanner.isNotEmpty()) {
+            } else {
+                ConstantUtils.DEFAULT_LOGO
+            }
+            serverBannerUrl = if (companyModel.outletBanner != null && companyModel.outletBanner.isNotEmpty()) {
                 preferenceSharedUtils.setOutletBannerUrl(companyModel.outletBanner)
                 companyModel.outletBanner
-            } else {ConstantUtils.DEFAULT_BANNER}
+            } else {
+                ConstantUtils.DEFAULT_BANNER
+            }
 
             imageLoader.displayImage(
-                outletLogoUrl,
+                serverLogoUrl,
                 outletLogoImage,
-                roundDisplayOption)
+                roundDisplayOption
+            )
 
             imageLoader.displayImage(
-                outletBannerUrl,
+                serverBannerUrl,
                 outletBannerImage,
-                displayOptions)
+                displayOptions
+            )
         }
         progress.dismiss()
     }
 
     private fun writeOutletDetailsToFireBase() {
-        val name = outletName.text.toString()
-        val contact = outletContact.text.toString()
-        val address = outletAddress.text.toString()
-
-        if (name.isNotEmpty() && contact.isNotEmpty() && contact.length == 10
-            && address.isNotEmpty() && AppUtils.networkConnectivityCheck(context!!)
+        val outletNameForDB = preferenceSharedUtils.getOutletName()!!
+        if (AppUtils.networkConnectivityCheck(context!!) && outletNameForDB != null && outletNameForDB.isNotEmpty()
+            && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
         ) {
-            progress.show()
-            FirebaseDatabase.getInstance()
-                .getReference(ConstantUtils.DETAILS)
-                .child(ConstantUtils.COMPANY)
-                .child(preferenceSharedUtils.getOutletName()!!)
-                .setValue(
-                    CompanyModel(
-                        name,
-                        address,
-                        contact,
-                        outletLogoUrl ?: "NA",
-                        outletBannerUrl ?: "NA"
+            val name = outletName.text.toString()
+            val contact = outletContact.text.toString()
+            val address = outletAddress.text.toString()
+
+            if (name.isNotEmpty() && contact.isNotEmpty()
+                && contact.length == 10 && address.isNotEmpty()
+            ) {
+                progress.show()
+                FirebaseDatabase.getInstance()
+                    .getReference(outletNameForDB)
+                    .child(ConstantUtils.OUTLET_PROFILE)
+                    .setValue(
+                        CompanyModel(
+                            name,
+                            address,
+                            contact,
+                            serverLogoUrl ?: "NA",
+                            serverBannerUrl ?: "NA"
+                        )
                     )
-                )
+                Toast.makeText(context!!, "Saved details successfully", Toast.LENGTH_SHORT).show()
+            } else {
+                if (name.isEmpty() && name.isBlank()) {
+                    outletName.error = "Enter Outlet Name"
+                }
 
-        } else {
-            if (name.isEmpty() && name.isBlank()) {
-                outletName.error = "Enter Outlet Name"
-            }
+                if (contact.isEmpty() && contact.isBlank() && contact.length != 10) {
+                    outletContact.error = "Enter Outlet Contact"
+                }
 
-            if (contact.isEmpty() && contact.isBlank() && contact.length != 10) {
-                outletContact.error = "Enter Outlet Contact"
-            }
-
-            if (address.isEmpty() && address.isBlank()) {
-                outletAddress.error = "Enter Outlet Address"
+                if (address.isEmpty() && address.isBlank()) {
+                    outletAddress.error = "Enter Outlet Address"
+                }
             }
         }
         progress.dismiss()
     }
 
-
     override fun onClick(view: View?) {
         when (view?.id) {
             R.id.frag_setup_save_btn_id -> {
-                progress.show()
                 writeOutletDetailsToFireBase()
             }
 
@@ -441,7 +453,7 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
                 getZipCodeAddress(outletZipcode.text.toString())
             }
 
-            R.id.frag_Setup_edit_logo_id -> {
+            R.id.frag_setup_logo_id -> {
                 isLogoImage = true
                 setupGallery()
             }

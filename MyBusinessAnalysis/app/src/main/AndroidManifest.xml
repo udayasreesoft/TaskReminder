@@ -16,7 +16,8 @@
         android:roundIcon="@mipmap/ic_launcher_round_logo"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activities.AddTaskActivity"></activity>
+        <activity android:name=".activities.BusinessActivity"></activity>
+        <activity android:name=".activities.AddTaskActivity" />
         <activity
             android:name=".activities.HomeActivity"
             android:label="@string/home"

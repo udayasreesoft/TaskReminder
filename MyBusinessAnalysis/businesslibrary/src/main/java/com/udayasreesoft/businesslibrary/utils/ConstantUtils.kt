@@ -17,11 +17,11 @@ class ConstantUtils {
 
         @JvmField val USERS = "Users"
         @JvmField val DETAILS = "Details"
-        @JvmField val PROFILES = "Profiles"
         @JvmField val OUTLET = "Outlets"
         @JvmField val CLIENT = "Clients"
-        @JvmField val COMPANY= "Company"
         @JvmField val PAYMENT = "Payment"
         @JvmField val PAYMENT_VERSION = "Payment Version"
+        @JvmField val BUSINESS = "Business"
+        @JvmField val OUTLET_PROFILE = "Outlet Profile"
     }
 }

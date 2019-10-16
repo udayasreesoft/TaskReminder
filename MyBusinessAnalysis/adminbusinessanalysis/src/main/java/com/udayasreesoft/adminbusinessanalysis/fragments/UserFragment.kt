@@ -16,7 +16,7 @@ import com.udayasreesoft.adminbusinessanalysis.retorfit.ApiClient
 import com.udayasreesoft.adminbusinessanalysis.retorfit.ApiInterface
 import com.udayasreesoft.adminbusinessanalysis.retorfit.model.PostOffice
 import com.udayasreesoft.adminbusinessanalysis.retorfit.model.ZipcodeModel
-import com.udayasreesoft.businesslibrary.models.BusinessOutletModel
+import com.udayasreesoft.businesslibrary.models.SingleEntityModel
 import com.udayasreesoft.businesslibrary.models.UserSignInModel
 import com.udayasreesoft.businesslibrary.utils.AppUtils
 import com.udayasreesoft.businesslibrary.utils.ConstantUtils
@@ -88,9 +88,9 @@ class UserFragment : Fragment(), View.OnClickListener {
                 }
 
                 override fun onDataChange(dataSnapShot: DataSnapshot) {
-                    val outletList = ArrayList<BusinessOutletModel>()
+                    val outletList = ArrayList<SingleEntityModel>()
                     for (ds in dataSnapShot.children) {
-                        outletList.add(ds.getValue(BusinessOutletModel::class.java)!!)
+                        outletList.add(ds.getValue(SingleEntityModel::class.java)!!)
                     }
                     for (element in outletList) {
                         outletNameList.add(element.businessOutlet)
@@ -136,7 +136,7 @@ class UserFragment : Fragment(), View.OnClickListener {
     }
 
     private fun writeOutletToFireBase(
-        businessOutlet: BusinessOutletModel,
+        singleEntity: SingleEntityModel,
         userSignInModel: UserSignInModel
     ) {
         if (AppUtils.networkConnectivityCheck(context!!)) {
@@ -144,7 +144,7 @@ class UserFragment : Fragment(), View.OnClickListener {
                 .getReference(ConstantUtils.DETAILS)
                 .child(ConstantUtils.OUTLET)
                 .push()
-                .setValue(businessOutlet) { error, _ ->
+                .setValue(singleEntity) { error, _ ->
                     if (error == null) {
                         writeUserToFirebase(userSignInModel)
                     } else {
@@ -343,7 +343,10 @@ class UserFragment : Fragment(), View.OnClickListener {
                     if (isOutletSelected) {
                         writeUserToFirebase(userSignInModel)
                     } else {
-                        writeOutletToFireBase(BusinessOutletModel(outletName), userSignInModel)
+                        writeOutletToFireBase(
+                            SingleEntityModel(
+                                outletName
+                            ), userSignInModel)
                     }
 
                 } else {

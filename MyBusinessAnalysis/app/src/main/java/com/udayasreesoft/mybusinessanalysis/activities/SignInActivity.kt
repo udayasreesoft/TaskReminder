@@ -1,6 +1,5 @@
 package com.udayasreesoft.mybusinessanalysis.activities
 
-import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.Point
 import android.graphics.Typeface
@@ -20,7 +19,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.udayasreesoft.businesslibrary.models.BusinessOutletModel
+import com.udayasreesoft.businesslibrary.models.SingleEntityModel
 import com.udayasreesoft.mybusinessanalysis.R
 import com.udayasreesoft.businesslibrary.models.UserSignInModel
 import com.udayasreesoft.businesslibrary.utils.AppUtils
@@ -204,9 +203,9 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                 }
 
                 override fun onDataChange(dataSnapShot: DataSnapshot) {
-                    val outletList = ArrayList<BusinessOutletModel>()
+                    val outletList = ArrayList<SingleEntityModel>()
                     for(ds in dataSnapShot.children) {
-                        outletList.add(ds.getValue(BusinessOutletModel::class.java)!!)
+                        outletList.add(ds.getValue(SingleEntityModel::class.java)!!)
                     }
                     val outletName = ArrayList<String>()
                     for (element in outletList) {

@@ -64,6 +64,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
     private var isOneTime = true
 
     private var isPaid = false
+    private var isBusiness = false
 
     private lateinit var preferenceSharedUtils: PreferenceSharedUtils
     private lateinit var progress : CustomProgressDialog
@@ -72,6 +73,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
         initView()
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             setupMPermissions()
         }
@@ -185,7 +187,8 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
 
                 R.id.menu_drawable_todaybusiness -> {
                     FRAGMENT_POSITION = 2
-                    fragmentLauncher()
+                    navToolbar.title = "Business"
+                    startActivity(Intent(this, BusinessActivity::class.java))
                 }
 
                 R.id.menu_drawable_purchase -> {
@@ -223,8 +226,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
             }
 
             2 -> {
-                navToolbar.title = "Business"
-                fragment = UserBusinessFragment()
+
             }
 
             3 -> {
@@ -233,10 +235,8 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
             }
 
             4 -> {
-                if (AppUtils.networkConnectivityCheck(this)) {
-                    navToolbar.title = "Outlet"
-                    fragment = UserOutletSetupFragment()
-                }
+                navToolbar.title = "Outlet"
+                fragment = UserOutletSetupFragment()
             }
 
             5 -> {
@@ -477,7 +477,9 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
     }
 
     override fun onBackPressed() {
-        if (FRAGMENT_POSITION > 0) {
+        if (isBusiness && FRAGMENT_POSITION == 2) {
+
+        } else if (FRAGMENT_POSITION > 0) {
             FRAGMENT_POSITION = 0
             clearBackStack()
             FetchAllTaskAsync().execute()
