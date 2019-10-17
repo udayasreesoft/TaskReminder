@@ -21,17 +21,34 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-    <android.support.design.widget.TextInputLayout
+    <LinearLayout
+        android:weightSum="1"
+        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <EditText
-            android:id="@+id/remainder_task_date_id"
-            android:hint="@string/select_date"
-            android:focusable="false"
-            android:cursorVisible="false"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-    </android.support.design.widget.TextInputLayout>
+        <android.support.design.widget.TextInputLayout
+            android:layout_weight="0.85"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content">
+            <EditText
+                android:id="@+id/remainder_task_date_id"
+                android:hint="@string/select_date"
+                android:clickable="false"
+                android:cursorVisible="false"
+                android:editable="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </android.support.design.widget.TextInputLayout>
+
+        <ImageView
+            android:src="@drawable/ic_calendar_task"
+            android:layout_weight="0.15"
+            android:tint="@color/colorPrimary"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"/>
+    </LinearLayout>
 
     <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
@@ -49,12 +66,10 @@
         android:layout_height="wrap_content">
         <EditText
             android:id="@+id/remainder_task_cheque_id"
-            android:layout_marginTop="10dp"
             android:hint="@string/cheque_number"
             android:inputType="number"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
-
     </android.support.design.widget.TextInputLayout>
 
     <android.support.design.widget.TextInputLayout
@@ -62,16 +77,15 @@
         android:layout_height="wrap_content">
         <EditText
             android:id="@+id/remainder_task_amount_id"
-            android:layout_marginTop="10dp"
             android:hint="@string/amount"
             android:inputType="number"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
-
     </android.support.design.widget.TextInputLayout>
 
     <Spinner
         android:id="@+id/remainder_task_remind_id"
+        android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="?android:actionBarSize"/>
 

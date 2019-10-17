@@ -3,7 +3,7 @@ package com.udayasreesoft.businesslibrary.models
 import android.os.Parcel
 import android.os.Parcelable
 
-data class HomeModel(val title : String, val total : Int) : Parcelable  {
+data class AmountViewModel(val title : String, val total : Int) : Parcelable  {
     constructor(parcel: Parcel) : this(
         parcel.readString(),
         parcel.readInt()
@@ -19,12 +19,12 @@ data class HomeModel(val title : String, val total : Int) : Parcelable  {
         return 0
     }
 
-    companion object CREATOR : Parcelable.Creator<HomeModel> {
-        override fun createFromParcel(parcel: Parcel): HomeModel {
-            return HomeModel(parcel)
+    companion object CREATOR : Parcelable.Creator<AmountViewModel> {
+        override fun createFromParcel(parcel: Parcel): AmountViewModel {
+            return AmountViewModel(parcel)
         }
 
-        override fun newArray(size: Int): Array<HomeModel?> {
+        override fun newArray(size: Int): Array<AmountViewModel?> {
             return arrayOfNulls(size)
         }
     }

@@ -93,7 +93,6 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
         loginBtn.setOnClickListener(this)
 
         progress = CustomProgressDialog(this).getInstance()
-        progress.setMessage("Connection to server. Please wait until process finish...")
         progress.build()
 
         if (!AppUtils.networkConnectivityCheck(this)) {
@@ -112,7 +111,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
         readOutletToFireBase()
     }
 
-    private fun readFromFireBase(userSignInModel: UserSignInModel) {
+    private fun readUserFromFireBase(userSignInModel: UserSignInModel) {
         if (AppUtils.networkConnectivityCheck(this)) {
             val fireBaseReference = FirebaseDatabase.getInstance()
                 .getReference(userSignInModel.userOutlet)
@@ -175,7 +174,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                     .child(userSignInModel.userMobile)
                     .setValue(userSignInModel) { error, _ ->
                         if (error == null) {
-                            readFromFireBase(userSignInModel)
+                            readUserFromFireBase(userSignInModel)
                         } else {
                             progress.dismiss()
                             Toast.makeText(
@@ -192,6 +191,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun readOutletToFireBase() {
         if (AppUtils.networkConnectivityCheck(this)) {
+            progress.setMessage("Fetching Outlet Name")
             progress.show()
             val firebaseReference = FirebaseDatabase.getInstance()
                 .getReference(ConstantUtils.DETAILS)
@@ -318,6 +318,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                     if (userName.isNotEmpty() && userMobile.isNotEmpty() && userMobile.length == 10
                         && outletName.isNotEmpty() && outletCode.isNotEmpty() && userId.isNotEmpty() && verificationCode.isNotEmpty()
                     ) {
+                        progress.setMessage("Connection to server. Please wait...")
                         progress.show()
                         val userSignInModel =
                             UserSignInModel(
@@ -328,7 +329,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                                 verificationCode,
                                 false, false
                             )
-                        readFromFireBase(userSignInModel)
+                        readUserFromFireBase(userSignInModel)
                     } else {
                         if (userName.isEmpty()) {
                             loginUserName.error = "Enter User Name"

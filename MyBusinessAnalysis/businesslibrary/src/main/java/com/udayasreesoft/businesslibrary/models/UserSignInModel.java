@@ -1,22 +1,32 @@
 package com.udayasreesoft.businesslibrary.models;
 
 public class UserSignInModel {
-    private String userId, userName, userMobile, /*userPassword,*/ userOutlet, verificationCode;
+    private String userId, userName, userMobile, registerDate, userOutlet, verificationCode;
     private boolean isCodeVerified, isAdmin;
 
     public UserSignInModel() {
     }
 
-    public UserSignInModel(String userId, String userName, String userMobile, /*String userPassword,*/ String userOutlet, String verificationCode, boolean isCodeVerified, boolean isAdmin) {
+    public UserSignInModel(String userId, String userName, String userMobile, String userOutlet, String verificationCode, boolean isCodeVerified, boolean isAdmin) {
         this.userId = userId;
         this.userName = userName;
         this.userMobile = userMobile;
-        /*this.userPassword = userPassword;*/
         this.userOutlet = userOutlet;
         this.verificationCode = verificationCode;
         this.isCodeVerified = isCodeVerified;
         this.isAdmin = isAdmin;
     }
+
+    /*public UserSignInModel(String userId, String userName, String userMobile, String registerDate, String userOutlet, String verificationCode, boolean isCodeVerified, boolean isAdmin) {
+        this.userId = userId;
+        this.userName = userName;
+        this.userMobile = userMobile;
+        this.registerDate = registerDate;
+        this.userOutlet = userOutlet;
+        this.verificationCode = verificationCode;
+        this.isCodeVerified = isCodeVerified;
+        this.isAdmin = isAdmin;
+    }*/
 
     public String getUserId() {
         return userId;
@@ -42,13 +52,13 @@ public class UserSignInModel {
         this.userMobile = userMobile;
     }
 
-    /*public String getUserPassword() {
-        return userPassword;
+    public String getRegisterDate() {
+        return registerDate;
     }
 
-    public void setUserPassword(String userPassword) {
-        this.userPassword = userPassword;
-    }*/
+    public void setRegisterDate(String registerDate) {
+        this.registerDate = registerDate;
+    }
 
     public String getUserOutlet() {
         return userOutlet;

@@ -20,6 +20,7 @@ class PreferenceSharedUtils(val context: Context) {
     private val outlet_logo_url = "OUTLET_LOGO_URL"
     private val outlet_banner_url = "OUTLET_BANNER_URL"
     private val pay_update_version = "PAY_UPDATE_VERSION"
+    private val registered_date_in_millis = "REGISTERED_DATE"
 
     @Synchronized
     fun getInstance() : PreferenceSharedUtils{
@@ -123,6 +124,14 @@ class PreferenceSharedUtils(val context: Context) {
 
     fun getPayVersionUpdate() : Float? {
         return sharedPreferences.getFloat(pay_update_version, 0.0f)
+    }
+
+    fun setRegisteredDate(millis : Long) {
+        sharedPreferences.edit()?.putLong(registered_date_in_millis, millis)?.apply()
+    }
+
+    fun getRegisteredDate() : Long {
+        return sharedPreferences.getLong(registered_date_in_millis, 0L)
     }
 
     fun clearAlarmIDPreference() {

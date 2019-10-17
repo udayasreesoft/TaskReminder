@@ -10,7 +10,6 @@
     </string>
     <string name="select_company">Select Company Name</string>
     <string name="data_is_empty">Data is Empty</string>
-    <string name="select_date">Select Date</string>
     <string name="reminding_task">Reminding Task</string>
     <string name="login_in">Sign In</string>
     <string name="user_name">User Name</string>
@@ -46,4 +45,5 @@
     <string name="client_name">Client Name</string>
     <string name="select_date">Select Date</string>
     <string name="save_business">Save Business</string>
+    <string name="user">User</string>
 </resources>

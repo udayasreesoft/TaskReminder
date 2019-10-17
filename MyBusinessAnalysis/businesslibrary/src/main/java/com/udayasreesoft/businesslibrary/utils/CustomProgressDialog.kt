@@ -41,7 +41,9 @@ class CustomProgressDialog(val context: Context) {
     }
 
     fun show() {
+        dismiss()
         if (progressDialog != null && !progressDialog!!.isShowing) {
+            progressDialog!!.setMessage(progressMessage)
             progressDialog!!.show()
         }
     }

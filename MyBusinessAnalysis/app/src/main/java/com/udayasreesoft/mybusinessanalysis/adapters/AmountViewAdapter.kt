@@ -1,7 +1,9 @@
 package com.udayasreesoft.mybusinessanalysis.adapters
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Typeface
+import android.support.v4.content.ContextCompat
 import android.support.v4.os.ConfigurationCompat
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -9,25 +11,42 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.udayasreesoft.businesslibrary.models.HomeModel
+import com.udayasreesoft.businesslibrary.models.AmountViewModel
 import com.udayasreesoft.businesslibrary.utils.AppUtils
 import com.udayasreesoft.mybusinessanalysis.R
 import java.text.NumberFormat
 
-class HomeAdapter(val context : Context,val homeModelList : List<HomeModel>, val homeInterface: HomeInterface)
-    : RecyclerView.Adapter<HomeAdapter.HomeHolder>() {
+@SuppressLint("SetTextI18n")
+class AmountViewAdapter(val context : Context, val amountViewModelList : ArrayList<AmountViewModel>, val homeInterface: HomeInterface)
+    : RecyclerView.Adapter<AmountViewAdapter.HomeHolder>() {
+
+    init {
+        val model1 = amountViewModelList[0]
+        for (i in 0 until amountViewModelList.size) {
+            val element = amountViewModelList[i]
+            if (element.title == "Expenses") {
+                amountViewModelList[0] = element
+                amountViewModelList[i] = model1
+                break
+            }
+        }
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, position: Int): HomeHolder {
         return HomeHolder(LayoutInflater.from(this.context).inflate(R.layout.adapter_home_layout, parent, false))
     }
 
     override fun getItemCount(): Int {
-        return homeModelList.size ?: 0
+        return amountViewModelList.size ?: 0
     }
 
-    override fun onBindViewHolder(holder: HomeAdapter.HomeHolder, position: Int) {
-        with(homeModelList[position]) {
-            holder.homeTitle.text = title
+    override fun onBindViewHolder(holder: AmountViewAdapter.HomeHolder, position: Int) {
+        with(amountViewModelList[position]) {
+            holder.homeTitle.text = title.toUpperCase()
             holder.homeTotal.text = "Rs.${NumberFormat.getNumberInstance(ConfigurationCompat.getLocales(context.resources.configuration)[0]).format(total)}/-"
+            if (title == "Expenses") {
+                holder.homeLayout.setBackgroundColor(ContextCompat.getColor(context!!, android.R.color.holo_red_light))
+            }
         }
     }
 

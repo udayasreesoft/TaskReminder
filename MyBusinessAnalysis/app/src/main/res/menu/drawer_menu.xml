@@ -8,6 +8,12 @@
             android:id="@+id/menu_drawable_home"
             android:icon="@drawable/ic_home"
             android:title="@string/home" />
+
+        <item
+            android:id="@+id/menu_drawable_users"
+            android:icon="@drawable/ic_clients"
+            android:title="@string/user"
+            />
     </group>
 
     <item android:title="@string/app_name">
@@ -29,20 +35,17 @@
         </menu>
     </item>
 
-    <item android:title="@string/clients">
+    <item android:title="@string/my_outlet_analysis">
+        <menu>
+            <item
+                android:id="@+id/menu_outlet_setup_client"
+                android:icon="@drawable/ic_outlet"
+                android:title="@string/outlet_settings" />
 
-        <item android:title="@string/my_outlet_analysis">
-            <menu>
-                <item
-                    android:id="@+id/menu_outlet_setup_client"
-                    android:icon="@drawable/ic_outlet"
-                    android:title="@string/outlet_settings" />
-
-                <item
-                    android:id="@+id/menu_drawable_client"
-                    android:icon="@drawable/ic_clients"
-                    android:title="@string/clients" />
-            </menu>
-        </item>
+            <item
+                android:id="@+id/menu_drawable_client"
+                android:icon="@drawable/ic_clients"
+                android:title="@string/clients" />
+        </menu>
     </item>
 </menu>

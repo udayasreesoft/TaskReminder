@@ -32,7 +32,7 @@ import com.nostra13.universalimageloader.core.ImageLoader
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration
 import com.nostra13.universalimageloader.core.assist.ImageScaleType
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer
-import com.udayasreesoft.businesslibrary.models.HomeModel
+import com.udayasreesoft.businesslibrary.models.AmountViewModel
 import com.udayasreesoft.businesslibrary.models.PaymentModelMain
 import com.udayasreesoft.businesslibrary.utils.AppUtils
 import com.udayasreesoft.businesslibrary.utils.ConstantUtils
@@ -58,7 +58,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
 
     private var FRAGMENT_POSITION = 0
 
-    private lateinit var homeModelList : ArrayList<HomeModel>
+    private lateinit var amountViewModelList : ArrayList<AmountViewModel>
     private var totalPaidSum = 0
     private var totalPayableSum = 0
     private var isOneTime = true
@@ -82,10 +82,10 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
     private fun initView() {
         preferenceSharedUtils = PreferenceSharedUtils(this).getInstance()
         AppUtils.isAdminStatus = preferenceSharedUtils.getAdminStatus()
-        homeModelList = ArrayList<HomeModel>()
+        amountViewModelList = ArrayList<AmountViewModel>()
 
         progress = CustomProgressDialog(this@HomeActivity).getInstance()
-        progress.setMessage("Connection to server. Please wait until process finish...")
+        progress.setMessage("Connection to server. Please wait...")
         progress.build()
 
         drawerLayout = findViewById(R.id.home_nav_drawer_id)
@@ -168,7 +168,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
         actionBarDrawerToggle.syncState()
 
         val navMenu = navigationView.menu
-        if (!preferenceSharedUtils.getAdminStatus()) {
+        if (!AppUtils.isAdminStatus) {
             navMenu.findItem(R.id.menu_outlet_setup_client).isVisible = false
         }
 
@@ -205,6 +205,11 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
                     FRAGMENT_POSITION = 5
                     fragmentLauncher()
                 }
+
+                R.id.menu_drawable_users -> {
+                    FRAGMENT_POSITION = 6
+                    fragmentLauncher()
+                }
             }
             drawerLayout.closeDrawers()
             true
@@ -217,7 +222,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
         when (FRAGMENT_POSITION) {
             0 -> {
                 navToolbar.title = "Home"
-                fragment = UserHomeFragment.newInstance(homeModelList)
+                fragment = UserHomeFragment.newInstance(amountViewModelList)
             }
 
             1 -> {
@@ -242,6 +247,11 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
             5 -> {
                 navToolbar.title = "Clients"
                 fragment = UserClientsFragment()
+            }
+
+            6 -> {
+                navToolbar.title = "Users"
+                fragment = OutletUserFragment()
             }
         }
 
@@ -306,6 +316,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
         if (AppUtils.networkConnectivityCheck(this@HomeActivity)) {
             if (outletNameForDB != null && outletNameForDB.isNotEmpty()
                 && outletNameForDB.isNotBlank() && outletNameForDB != "NA") {
+                progress.show()
                 val fireBaseReference = FirebaseDatabase.getInstance()
                     .getReference(outletNameForDB)
                     .child(ConstantUtils.PAYMENT_VERSION)
@@ -322,8 +333,10 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
                                 preferenceSharedUtils.setPayVersionUpdate(version.toFloat())
                                 getPayAccountDetailsFromFireBase()
                             }
+                            progress.dismiss()
+                        } else {
+                            progress.dismiss()
                         }
-                        progress.dismiss()
                     }
                 })
             }
@@ -333,10 +346,10 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
 
     private fun getPayAccountDetailsFromFireBase() {
         if (AppUtils.networkConnectivityCheck(this@HomeActivity)) {
-            progress.show()
             val outletNameForDB = preferenceSharedUtils.getOutletName()
             if (outletNameForDB != null && outletNameForDB.isNotEmpty()
                 && outletNameForDB.isNotBlank() && outletNameForDB != "NA") {
+                progress.show()
                 val fireBaseReference = FirebaseDatabase.getInstance()
                     .getReference(outletNameForDB)
                     .child(ConstantUtils.PAYMENT)
@@ -364,6 +377,10 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
     }
 
     inner class FetchAllTaskAsync : AsyncTask<Void, Void, List<TaskDataTable>>() {
+        override fun onPreExecute() {
+            super.onPreExecute()
+            progress.show()
+        }
         override fun doInBackground(vararg params: Void?): List<TaskDataTable> {
             return TaskRepository(this@HomeActivity).queryAllTask() as ArrayList<TaskDataTable>
         }
@@ -385,10 +402,11 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
                     }
                 }
             }
+
+            amountViewModelList.clear()
+            amountViewModelList.add(AmountViewModel("Payable Amount", totalPayableSum))
+            amountViewModelList.add(AmountViewModel("Paid Amount", totalPaidSum))
             progress.dismiss()
-            homeModelList.clear()
-            homeModelList.add(HomeModel("Payable Amount", totalPayableSum))
-            homeModelList.add(HomeModel("Paid Amount", totalPaidSum))
             fragmentLauncher()
         }
     }

@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.util.Log
 import android.widget.Toast
+import java.text.SimpleDateFormat
 import java.util.*
 
 class AppUtils {
@@ -60,6 +61,16 @@ class AppUtils {
                     builder.create().show()
                 }
             } catch (e : Exception) {e.printStackTrace()}
+        }
+
+        fun getCurrentDate() :String{
+            val simpleDateFormat = SimpleDateFormat(ConstantUtils.DATE_FORMAT, Locale.US)
+            val calendar = Calendar.getInstance()
+            calendar.timeZone = TimeZone.getTimeZone("Asia/Calcutta")
+            calendar.set(Calendar.HOUR_OF_DAY, ConstantUtils.HOUR)
+            calendar.set(Calendar.MINUTE, ConstantUtils.MINUTE)
+            calendar.set(Calendar.SECOND, ConstantUtils.SECOND)
+            return simpleDateFormat.format(calendar.timeInMillis)
         }
 
         fun networkConnectivityCheck(context: Context): Boolean {
