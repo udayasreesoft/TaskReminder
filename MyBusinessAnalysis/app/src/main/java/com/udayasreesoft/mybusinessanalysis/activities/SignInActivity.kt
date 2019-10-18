@@ -315,6 +315,11 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                     val userMobile = loginMobile.text.toString()
                     val userId = AppUtils.fireBaseChildId(outletCode)
                     val verificationCode = AppUtils.randomNumbers().toString()
+                    val outletNameFetch = loginOutletName.text.toString()
+                    if (outletNameFetch != outletName) {
+                        loginOutletName.setText("")
+                        outletName = ""
+                    }
                     if (userName.isNotEmpty() && userMobile.isNotEmpty() && userMobile.length == 10
                         && outletName.isNotEmpty() && outletCode.isNotEmpty() && userId.isNotEmpty() && verificationCode.isNotEmpty()
                     ) {

@@ -38,6 +38,7 @@ import com.udayasreesoft.businesslibrary.utils.AppUtils
 import com.udayasreesoft.businesslibrary.utils.ConstantUtils
 import com.udayasreesoft.businesslibrary.utils.CustomProgressDialog
 import com.udayasreesoft.businesslibrary.utils.PreferenceSharedUtils
+import com.udayasreesoft.mybusinessanalysis.fragments.OutletUsersFragment
 import com.udayasreesoft.mybusinessanalysis.R
 import com.udayasreesoft.mybusinessanalysis.fragments.*
 import com.udayasreesoft.mybusinessanalysis.fragments.UserPaymentFragment
@@ -251,7 +252,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
 
             6 -> {
                 navToolbar.title = "Users"
-                fragment = OutletUserFragment()
+                fragment = OutletUsersFragment()
             }
         }
 

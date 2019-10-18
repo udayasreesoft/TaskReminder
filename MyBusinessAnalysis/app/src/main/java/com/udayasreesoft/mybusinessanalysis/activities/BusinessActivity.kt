@@ -263,6 +263,9 @@ class BusinessActivity : AppCompatActivity(), View.OnClickListener, AmountViewAd
             addLayout.animation = animation
         } else {
             addFab.show()
+            if (!AppUtils.isAdminStatus) {
+                addFab.hide()
+            }
             supportActionBar?.title = "Business List"
             addLayout.visibility = View.GONE
             listLayout.visibility = View.VISIBLE
