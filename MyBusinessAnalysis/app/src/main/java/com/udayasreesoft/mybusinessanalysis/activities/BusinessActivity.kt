@@ -1,6 +1,7 @@
 package com.udayasreesoft.mybusinessanalysis.activities
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.DatePickerDialog
 import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
@@ -108,11 +109,12 @@ class BusinessActivity : AppCompatActivity(), View.OnClickListener, AmountViewAd
 
                 val simpleDateFormat = SimpleDateFormat(ConstantUtils.DATE_FORMAT, Locale.US)
                 if (isAddBusiness) {
+                    removeAllLayouts()
                     addCalendar.setText(simpleDateFormat.format(calendar.time) ?: "")
                 } else {
                     listCalendar.setText(simpleDateFormat.format(calendar.time) ?: "")
-                    readBusinessFromFireBase()
                 }
+                readBusinessFromFireBase()
             }
 
         val datePicker = DatePickerDialog(
@@ -125,18 +127,17 @@ class BusinessActivity : AppCompatActivity(), View.OnClickListener, AmountViewAd
     }
 
     private fun readBusinessFromFireBase() {
-        val outletNameDB: String = preferenceSharedUtils.getOutletName()!!
         val selectedDate: String = if (isAddBusiness) {
             addCalendar.text.toString()
         } else {
             listCalendar.text.toString()
         }
         if (AppUtils.networkConnectivityCheck(this) && selectedDate.isNotEmpty()
-            && outletNameDB.isNotEmpty() && outletNameDB != "NA"
+            && AppUtils.OUTLET_NAME.isNotEmpty() && AppUtils.OUTLET_NAME != "NA"
         ) {
             progress.show()
             val fireBaseReference = FirebaseDatabase.getInstance()
-                .getReference(outletNameDB)
+                .getReference(AppUtils.OUTLET_NAME)
                 .child(ConstantUtils.BUSINESS)
                 .child(selectedDate)
 
@@ -152,27 +153,40 @@ class BusinessActivity : AppCompatActivity(), View.OnClickListener, AmountViewAd
                     if (dataSnapShot.exists()) {
                         val businessList = ArrayList<AmountViewModel>()
                         for (element in dataSnapShot.children) {
-                            businessList.add(AmountViewModel(
-                                element.key ?: "", element.value.toString().toInt() ?: 0))
+                            businessList.add(
+                                AmountViewModel(
+                                    element.key ?: "", element.value.toString().toInt() ?: 0
+                                )
+                            )
                         }
                         if (businessList.isNotEmpty()) {
-                            calculatePriceDetails(businessList)
-                            listRecyclerView.visibility = View.VISIBLE
-                            listEmpty.visibility = View.GONE
-                            val layoutManager = GridLayoutManager(
-                                this@BusinessActivity, 2,
-                                GridLayoutManager.VERTICAL, false
-                            )
-                            val adapter = AmountViewAdapter(this@BusinessActivity, businessList, this@BusinessActivity)
-                            listRecyclerView.layoutManager = layoutManager
-                            listRecyclerView.adapter = adapter
-                            adapter.notifyDataSetChanged()
+                            if (isAddBusiness) {
+                                editBusinessLayoutWithList(businessList)
+                            } else {
+                                calculatePriceDetails(businessList)
+                                listRecyclerView.visibility = View.VISIBLE
+                                listEmpty.visibility = View.GONE
+                                val layoutManager = GridLayoutManager(
+                                    this@BusinessActivity, 2,
+                                    GridLayoutManager.VERTICAL, false
+                                )
+                                val adapter =
+                                    AmountViewAdapter(this@BusinessActivity, businessList, this@BusinessActivity)
+                                listRecyclerView.layoutManager = layoutManager
+                                listRecyclerView.adapter = adapter
+                                adapter.notifyDataSetChanged()
+                            }
                         } else {
-                            netAmountText.text = "Rs. 0/-"
-                            expensesAmountText.text = "Rs. 0/-"
-                            grossAmountText.text = "Rs. 0/-"
-                            listRecyclerView.visibility = View.GONE
-                            listEmpty.visibility = View.VISIBLE
+                            if (isAddBusiness) {
+                                businessLayoutIDs.clear()
+                                createBusinessLayout(true)
+                            } else {
+                                netAmountText.text = "Rs. 0/-"
+                                expensesAmountText.text = "Rs. 0/-"
+                                grossAmountText.text = "Rs. 0/-"
+                                listRecyclerView.visibility = View.GONE
+                                listEmpty.visibility = View.VISIBLE
+                            }
                         }
                         progress.dismiss()
                     } else {
@@ -188,6 +202,36 @@ class BusinessActivity : AppCompatActivity(), View.OnClickListener, AmountViewAd
         }
     }
 
+    private fun editBusinessLayoutWithList(businessList : ArrayList<AmountViewModel>) {
+        if (businessList.isNotEmpty()) {
+            val model1 = businessList[0]
+            for (i in 0 until businessList.size) {
+                val element = businessList[i]
+                if (element.title == "Expenses") {
+                    businessList[0] = element
+                    businessList[i] = model1
+                    break
+                }
+            }
+
+            for (i in 0 until businessList.size) {
+                val element = businessList[i]
+                if (i == 0) {
+                    if (businessLayoutIDs.isNotEmpty()) {
+                        val ids = businessLayoutIDs[i]
+                        findViewById<EditText>(ids.amountId).setText(element.total.toString())
+                    }
+                } else {
+                    createBusinessLayout(false)
+                    if (businessLayoutIDs.isNotEmpty()) {
+                        val ids = businessLayoutIDs[i]
+                        findViewById<EditText>(ids.nameId).setText(element.title)
+                        findViewById<EditText>(ids.amountId).setText(element.total.toString())
+                    }
+                }
+            }
+        }
+    }
 
     private fun calculatePriceDetails(businessList: ArrayList<AmountViewModel>) {
         if (businessList.isNotEmpty()) {
@@ -204,17 +248,14 @@ class BusinessActivity : AppCompatActivity(), View.OnClickListener, AmountViewAd
             grossAmount = (netAmount - expensesAmount)
 
             netAmountText.text =
-                "Rs. ${NumberFormat.getNumberInstance(ConfigurationCompat.getLocales(resources.configuration)[0]).format(
-                    netAmount
-                )}/-"
+                "Rs. ${NumberFormat.getNumberInstance(ConfigurationCompat.getLocales(resources.configuration)[0])
+                    .format(netAmount)}/-"
             expensesAmountText.text =
-                "Rs. ${NumberFormat.getNumberInstance(ConfigurationCompat.getLocales(resources.configuration)[0]).format(
-                    expensesAmount
-                )}/-"
+                "Rs. ${NumberFormat.getNumberInstance(ConfigurationCompat.getLocales(resources.configuration)[0])
+                    .format(expensesAmount)}/-"
             grossAmountText.text =
-                "Rs. ${NumberFormat.getNumberInstance(ConfigurationCompat.getLocales(resources.configuration)[0]).format(
-                    grossAmount
-                )}/-"
+                "Rs. ${NumberFormat.getNumberInstance(ConfigurationCompat.getLocales(resources.configuration)[0])
+                    .format(grossAmount)}/-"
         } else {
             netAmountText.text = "Rs. 0/-"
             expensesAmountText.text = "Rs. 0/-"
@@ -222,15 +263,68 @@ class BusinessActivity : AppCompatActivity(), View.OnClickListener, AmountViewAd
         }
     }
 
-    private fun writeBusinessFromFireBase(businessModelList: ArrayList<AmountViewModel>) {
-        val outletNameDB: String = preferenceSharedUtils.getOutletName()!!
-        val selectedDate: String = addCalendar.text.toString() ?: ""
-        if (AppUtils.networkConnectivityCheck(this) && selectedDate.isNotEmpty()
-            && outletNameDB.isNotEmpty() && outletNameDB != "NA"
+    private fun calculateExpensesAndBusiness(businessModelList: ArrayList<AmountViewModel>) {
+        if (AppUtils.networkConnectivityCheck(this) && AppUtils.OUTLET_NAME.isNotEmpty() && AppUtils.OUTLET_NAME != "NA"
         ) {
             progress.show()
+            var expensesAmount = 0
+            var grossAmount = 0
+            var totalAmount = 0
+
+            val fireBaseRead = FirebaseDatabase.getInstance()
+                .getReference(AppUtils.OUTLET_NAME)
+                .child(ConstantUtils.TOTAL_AMOUNT)
+
+            fireBaseRead.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(error: DatabaseError) {
+                    grossAmount = 0
+                    expensesAmount = 0
+                }
+
+                override fun onDataChange(dataSnapShot: DataSnapshot) {
+                    if (dataSnapShot.exists()) {
+                        grossAmount = dataSnapShot.child(ConstantUtils.GROSS_AMOUNT).getValue(Int::class.java)!!
+                        expensesAmount = dataSnapShot.child(ConstantUtils.EXPENSES_AMOUNT).getValue(Int::class.java)!!
+
+                        writeBusinessFromFireBase(businessModelList, expensesAmount, grossAmount)
+                    }
+                }
+            })
+        }
+    }
+
+    private fun writeBusinessFromFireBase(businessModelList: ArrayList<AmountViewModel>, expensesAmount : Int,
+                                          grossAmount : Int) {
+        val selectedDate: String = addCalendar.text.toString() ?: ""
+        if (AppUtils.networkConnectivityCheck(this) && selectedDate.isNotEmpty()
+            && AppUtils.OUTLET_NAME.isNotEmpty() && AppUtils.OUTLET_NAME != "NA"
+        ) {
+            progress.show()
+
+            for (element in businessModelList) {
+                when (element.title) {
+                    "Expenses" -> {
+                        val totalAmount = expensesAmount + element.total
+                        FirebaseDatabase.getInstance()
+                            .getReference(AppUtils.OUTLET_NAME)
+                            .child(ConstantUtils.TOTAL_AMOUNT)
+                            .child(ConstantUtils.EXPENSES_AMOUNT)
+                            .setValue(totalAmount)
+                    }
+
+                    else -> {
+                        val totalAmount = grossAmount + element.total
+                        FirebaseDatabase.getInstance()
+                            .getReference(AppUtils.OUTLET_NAME)
+                            .child(ConstantUtils.TOTAL_AMOUNT)
+                            .child(ConstantUtils.GROSS_AMOUNT)
+                            .setValue(totalAmount)
+                    }
+                }
+            }
+
             val fireBaseReference = FirebaseDatabase.getInstance()
-                .getReference(outletNameDB)
+                .getReference(AppUtils.OUTLET_NAME)
                 .child(ConstantUtils.BUSINESS)
                 .child(selectedDate)
             for (i in 0 until businessModelList.size) {
@@ -278,27 +372,39 @@ class BusinessActivity : AppCompatActivity(), View.OnClickListener, AmountViewAd
         val deleteId = View.generateViewId()
         val nameId = View.generateViewId()
         val amountId = View.generateViewId()
+        val parentChildId = View.generateViewId()
+        businessLayoutIDs.add(BusinessViewIds(parentId, deleteId, nameId, amountId))
 
-        val layoutParams =
-            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
 
-        val parentLayout = LinearLayout(this)
-        parentLayout.layoutParams = layoutParams
-        parentLayout.orientation = LinearLayout.VERTICAL
-        parentLayout.gravity = Gravity.END
+        val parentLayout = RelativeLayout(this)
+        parentLayout.layoutParams =
+            RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT)
         parentLayout.id = parentId
 
         val deleteRow = ImageView(this)
-        deleteRow.layoutParams =
-            LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        val params = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT)
+        params.addRule(RelativeLayout.ALIGN_PARENT_END)
+        deleteRow.layoutParams = params
         deleteRow.setImageDrawable(ContextCompat.getDrawable(this, android.R.drawable.ic_delete))
         deleteRow.setBackgroundColor(Color.BLACK)
         deleteRow.id = deleteId
 
+        val parentChildLayout = LinearLayout(this)
+        val layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT)
+        layoutParams.addRule(RelativeLayout.BELOW, deleteId)
+        layoutParams.setMargins(0, 5, 0, 0)
+        parentChildLayout.layoutParams = layoutParams
+        parentChildLayout.orientation = LinearLayout.HORIZONTAL
+        parentChildLayout.weightSum = 2f
+        parentChildLayout.id = parentChildId
+
+
         val nameTextLayout = TextInputLayout(this)
-        nameTextLayout.layoutParams = layoutParams
+        nameTextLayout.layoutParams =
+            LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         val nameEditText = EditText(this)
-        nameEditText.layoutParams = layoutParams
+        nameEditText.layoutParams =
+            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         if (isFirst) {
             with(nameEditText) {
                 setText("Expenses")
@@ -317,23 +423,29 @@ class BusinessActivity : AppCompatActivity(), View.OnClickListener, AmountViewAd
         nameTextLayout.addView(nameEditText)
 
         val amountTextLayout = TextInputLayout(this)
-        amountTextLayout.layoutParams = layoutParams
+        amountTextLayout.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         val amountEditText = EditText(this)
-        amountEditText.layoutParams = layoutParams
+        amountEditText.layoutParams =
+            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         amountEditText.inputType = InputType.TYPE_CLASS_NUMBER
         amountEditText.hint = "Total Amount"
         amountEditText.id = amountId
         amountTextLayout.addView(amountEditText)
 
         val divider = View(this)
-        divider.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 3)
+        val dividerParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 3)
+        dividerParams.addRule(RelativeLayout.BELOW, parentChildId)
+        divider.layoutParams = dividerParams
         divider.setBackgroundColor(Color.BLACK)
-        divider.setPadding(0, 1, 0, 1)
+        divider.setPadding(0, 2, 0, 2)
+
+        parentChildLayout.addView(nameTextLayout)
+        parentChildLayout.addView(amountTextLayout)
 
         parentLayout.addView(deleteRow)
-        parentLayout.addView(nameTextLayout)
-        parentLayout.addView(amountTextLayout)
+        parentLayout.addView(parentChildLayout)
         parentLayout.addView(divider)
+
 
         includeLayout.addView(parentLayout)
 
@@ -351,7 +463,6 @@ class BusinessActivity : AppCompatActivity(), View.OnClickListener, AmountViewAd
                 }
             }
         }
-        businessLayoutIDs.add(BusinessViewIds(parentId, deleteId, nameId, amountId))
     }
 
     private fun checkForDataInView(): Boolean {
@@ -377,7 +488,20 @@ class BusinessActivity : AppCompatActivity(), View.OnClickListener, AmountViewAd
                     businessModelList.add(AmountViewModel(name, amount.toInt()))
                 }
             }
-            writeBusinessFromFireBase(businessModelList)
+
+            removeAllLayouts()
+
+            calculateExpensesAndBusiness(businessModelList)
+        }
+    }
+
+    private fun removeAllLayouts() {
+        if (businessLayoutIDs.isNotEmpty()) {
+            for (ids in businessLayoutIDs) {
+                includeLayout.removeView(findViewById(ids.parentId))
+            }
+            businessLayoutIDs.clear()
+            createBusinessLayout(true)
         }
     }
 
@@ -416,8 +540,9 @@ class BusinessActivity : AppCompatActivity(), View.OnClickListener, AmountViewAd
             }
             setViewVisibility(false)
         } else {
-            super.onBackPressed()
+            setResult(Activity.RESULT_CANCELED)
             finish()
+            super.onBackPressed()
         }
     }
 }

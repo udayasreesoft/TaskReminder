@@ -28,6 +28,7 @@ class UserClientsFragment : Fragment(), View.OnClickListener {
     private lateinit var progress : CustomProgressDialog
 
     private lateinit var clientListView : ListView
+    private lateinit var emptyText : TextView
     private lateinit var clientEditText : EditText
     private lateinit var clientSave : Button
     private lateinit var clientCancel : Button
@@ -53,6 +54,7 @@ class UserClientsFragment : Fragment(), View.OnClickListener {
         clientCancel = view.findViewById(R.id.frag_client_cancel_id)
         clientFAB = view.findViewById(R.id.frag_client_fab_id)
         clientLayout = view.findViewById(R.id.frag_client_editor_layout)
+        emptyText = view.findViewById(R.id.frag_client_empty_id)
 
         clientSave.setOnClickListener(this)
         clientCancel.setOnClickListener(this)
@@ -66,9 +68,20 @@ class UserClientsFragment : Fragment(), View.OnClickListener {
         if (!AppUtils.isAdminStatus) {
             clientFAB.hide()
         }
-
-        setUpListView()
+        visibility(true)
         readClientsFromFireBase()
+    }
+
+    private fun visibility(isEmpty : Boolean) {
+        if (isEmpty) {
+            clientListView.visibility = View.GONE
+            emptyText.visibility = View.VISIBLE
+            clientLayout.visibility = View.GONE
+        } else {
+            clientListView.visibility = View.VISIBLE
+            emptyText.visibility = View.GONE
+            clientLayout.visibility = View.GONE
+        }
     }
 
     private fun setUpListView() {
@@ -80,13 +93,12 @@ class UserClientsFragment : Fragment(), View.OnClickListener {
 
     private fun writeClientToFireBase(client: String) {
         if (client.isNotEmpty() && AppUtils.networkConnectivityCheck(context!!)) {
-            val outletNameForDB = preferenceSharedUtils.getOutletName()
-            if (outletNameForDB != null && outletNameForDB.isNotEmpty()
-                && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
+            if (AppUtils.OUTLET_NAME != null && AppUtils.OUTLET_NAME.isNotEmpty()
+                && AppUtils.OUTLET_NAME.isNotBlank() && AppUtils.OUTLET_NAME != "NA"
             ) {
                 val model = SingleEntityModel(client)
                 FirebaseDatabase.getInstance()
-                    .getReference(outletNameForDB)
+                    .getReference(AppUtils.OUTLET_NAME)
                     .child(ConstantUtils.CLIENT)
                     .push()
                     .setValue(model)
@@ -99,13 +111,12 @@ class UserClientsFragment : Fragment(), View.OnClickListener {
 
     private fun readClientsFromFireBase() {
         if (AppUtils.networkConnectivityCheck(context!!)) {
-            val outletNameForDB = preferenceSharedUtils.getOutletName()
-            if (outletNameForDB != null && outletNameForDB.isNotEmpty()
-                && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
+            if (AppUtils.OUTLET_NAME != null && AppUtils.OUTLET_NAME.isNotEmpty()
+                && AppUtils.OUTLET_NAME.isNotBlank() && AppUtils.OUTLET_NAME != "NA"
             ) {
                 progress.show()
                 val fireBaseReference = FirebaseDatabase.getInstance()
-                    .getReference(outletNameForDB)
+                    .getReference(AppUtils.OUTLET_NAME)
                     .child(ConstantUtils.CLIENT)
 
                 fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -120,9 +131,10 @@ class UserClientsFragment : Fragment(), View.OnClickListener {
                                 clientList.add(ds.getValue(SingleEntityModel::class.java)!!)
                             }
                             for (i in 0 until clientList.size) {
-                                clientsName.add(" ${i+1}. ${clientList[i].businessOutlet}")
+                                clientsName.add(" ${i+1}. ${clientList[i].inputData}")
                             }
                             arrayAdapter?.notifyDataSetChanged()
+                            visibility(false)
                             progress.dismiss()
                         } else {
                             progress.dismiss()

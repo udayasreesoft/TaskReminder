@@ -13,6 +13,7 @@ class AppUtils {
     companion object {
         @JvmField var isAdminStatus = false
         @JvmField var isServiceRun = true
+        @JvmField var OUTLET_NAME = ""
 
         @JvmField var SCREEN_WIDTH = 0
         @JvmField var SCREEN_HEIGHT = 0

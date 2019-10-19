@@ -1,20 +1,20 @@
 package com.udayasreesoft.businesslibrary.models;
 
 public class SingleEntityModel {
-    private String businessOutlet;
+    private String inputData;
 
     public SingleEntityModel() {
     }
 
-    public SingleEntityModel(String businessOutlet) {
-        this.businessOutlet = businessOutlet;
+    public SingleEntityModel(String inputData) {
+        this.inputData = inputData;
     }
 
-    public String getBusinessOutlet() {
-        return businessOutlet;
+    public String getInputData() {
+        return inputData;
     }
 
-    public void setBusinessOutlet(String businessOutlet) {
-        this.businessOutlet = businessOutlet;
+    public void setInputData(String inputData) {
+        this.inputData = inputData;
     }
 }

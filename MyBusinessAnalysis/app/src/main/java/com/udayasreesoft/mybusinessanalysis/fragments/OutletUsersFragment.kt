@@ -8,6 +8,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -26,6 +27,7 @@ import com.udayasreesoft.mybusinessanalysis.adapters.UsersAdapter
 class OutletUsersFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
+    private lateinit var emptyText : TextView
     private lateinit var preferenceSharedUtils: PreferenceSharedUtils
     private lateinit var progress : CustomProgressDialog
 
@@ -40,20 +42,21 @@ class OutletUsersFragment : Fragment() {
 
     private fun initView(view: View) {
         recyclerView = view.findViewById(R.id.frag_users_recycler_id)
+        emptyText = view.findViewById(R.id.frag_users_empty_id)
         preferenceSharedUtils = PreferenceSharedUtils(context!!).getInstance()
         progress = CustomProgressDialog(context!!).getInstance()
         progress.setMessage("Connecting to server. Please wait...")
         progress.build()
 
+        visibility(true)
         readUsersFromFireBase()
     }
 
     private fun readUsersFromFireBase() {
-        val outletNameDB = preferenceSharedUtils.getOutletName()!!
-        if (AppUtils.networkConnectivityCheck(context!!) && outletNameDB.isNotEmpty() && outletNameDB != "NA") {
+        if (AppUtils.networkConnectivityCheck(context!!) && AppUtils.OUTLET_NAME.isNotEmpty() && AppUtils.OUTLET_NAME != "NA") {
             progress.show()
             val fireBaseReference = FirebaseDatabase.getInstance()
-                .getReference(outletNameDB)
+                .getReference(AppUtils.OUTLET_NAME)
                 .child(ConstantUtils.USERS)
 
             fireBaseReference.addValueEventListener(object : ValueEventListener {
@@ -69,9 +72,10 @@ class OutletUsersFragment : Fragment() {
                             if (userModel != null) {
                                 userModelList.add(userModel)
                             }
-                            setupRecyclerView(userModelList)
-                            progress.dismiss()
                         }
+                        setupRecyclerView(userModelList)
+                        progress.dismiss()
+                        visibility(false)
                     } else {
                         progress.dismiss()
                     }
@@ -87,6 +91,16 @@ class OutletUsersFragment : Fragment() {
             recyclerView.layoutManager = layoutManager
             recyclerView.adapter = adapter
             adapter.notifyDataSetChanged()
+        }
+    }
+
+    private fun visibility(isEmpty : Boolean) {
+        if (isEmpty) {
+            emptyText.visibility = View.VISIBLE
+            recyclerView.visibility = View.GONE
+        } else {
+            recyclerView.visibility = View.VISIBLE
+            emptyText.visibility = View.GONE
         }
     }
 }

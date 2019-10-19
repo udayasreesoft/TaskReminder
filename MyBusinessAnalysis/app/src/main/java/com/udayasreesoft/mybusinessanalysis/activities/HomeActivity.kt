@@ -54,21 +54,18 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
 
     private lateinit var fragmentContainer: FrameLayout
     private lateinit var displayOptions: DisplayImageOptions
-    private lateinit var roundDisplayOptions : DisplayImageOptions
+    private lateinit var roundDisplayOptions: DisplayImageOptions
     private lateinit var imageLoader: ImageLoader
 
+    private lateinit var amountViewModelList: ArrayList<AmountViewModel>
     private var FRAGMENT_POSITION = 0
-
-    private lateinit var amountViewModelList : ArrayList<AmountViewModel>
-    private var totalPaidSum = 0
-    private var totalPayableSum = 0
     private var isOneTime = true
 
     private var isPaid = false
     private var isBusiness = false
 
     private lateinit var preferenceSharedUtils: PreferenceSharedUtils
-    private lateinit var progress : CustomProgressDialog
+    private lateinit var progress: CustomProgressDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,9 +78,10 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
     }
 
     private fun initView() {
+        amountViewModelList = ArrayList<AmountViewModel>()
         preferenceSharedUtils = PreferenceSharedUtils(this).getInstance()
         AppUtils.isAdminStatus = preferenceSharedUtils.getAdminStatus()
-        amountViewModelList = ArrayList<AmountViewModel>()
+        AppUtils.OUTLET_NAME = preferenceSharedUtils.getOutletName() ?: ""
 
         progress = CustomProgressDialog(this@HomeActivity).getInstance()
         progress.setMessage("Connection to server. Please wait...")
@@ -102,7 +100,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
         if (AppUtils.networkConnectivityCheck(this)) {
             readPaymentVersionToFireBase()
         } else {
-            FetchAllTaskAsync().execute()
+            /*TODO: Exit with AlertDialog*/
         }
     }
 
@@ -177,7 +175,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
             when (menu.itemId) {
                 R.id.menu_drawable_home -> {
                     FRAGMENT_POSITION = 0
-                    FetchAllTaskAsync().execute()
+                    readAmountFromFireBase()
                 }
 
                 R.id.menu_drawable_amount -> {
@@ -189,7 +187,10 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
                 R.id.menu_drawable_todaybusiness -> {
                     FRAGMENT_POSITION = 2
                     navToolbar.title = "Business"
-                    startActivity(Intent(this, BusinessActivity::class.java))
+                    startActivityForResult(
+                        Intent(this, BusinessActivity::class.java),
+                        ConstantUtils.PERMISSION_BUSINESS
+                    )
                 }
 
                 R.id.menu_drawable_purchase -> {
@@ -258,10 +259,12 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
 
         if (fragment != null) {
             supportFragmentManager.beginTransaction()
-                .setCustomAnimations(R.anim.fragment_slide_left_enter,
+                .setCustomAnimations(
+                    R.anim.fragment_slide_left_enter,
                     R.anim.fragment_slide_left_exit,
                     R.anim.fragment_slide_right_enter,
-                    R.anim.fragment_slide_right_exit)
+                    R.anim.fragment_slide_right_exit
+                )
                 .replace(R.id.nav_appbar_container_id, fragment)
                 .addToBackStack(fragment::class.java.simpleName)
                 .commit()
@@ -282,8 +285,16 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
         headerView.findViewById<TextView>(R.id.nav_header_outletname).text = preferenceSharedUtils.getOutletName()
     }
 
-    inner class DataBaseInsertDeleteAsync(private val dataSnapShot: DataSnapshot)
-        : AsyncTask<Void, Void, Boolean>() {
+    inner class DataBaseInsertDeleteAsync(private val dataSnapShot: DataSnapshot) : AsyncTask<Void, Void, Boolean>() {
+
+        val payableList = ArrayList<String>()
+        val paidList = ArrayList<String>()
+
+        override fun onPreExecute() {
+            super.onPreExecute()
+            progress.show()
+        }
+
         override fun doInBackground(vararg p0: Void?): Boolean? {
             for (element in dataSnapShot.children) {
                 val mainModel = element.getValue(PaymentModelMain::class.java)
@@ -295,9 +306,16 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
                             TaskRepository(this@HomeActivity).clearDataBase()
                         }
                         with(paymentModel) {
+                            if (payStatus) {
+                                paidList.add(payAmount)
+                            } else {
+                                payableList.add(payAmount)
+                            }
                             TaskRepository(this@HomeActivity).insertTask(
-                                TaskDataTable(mainModel.uniqueKey, clientName, dateInMillis, payAmount,
-                                    chequeNumber, payStatus, preDays)
+                                TaskDataTable(
+                                    mainModel.uniqueKey, clientName, dateInMillis, payAmount,
+                                    chequeNumber, payStatus, preDays
+                                )
                             )
                         }
                     }
@@ -308,18 +326,32 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
 
         override fun onPostExecute(result: Boolean?) {
             super.onPostExecute(result)
-            FetchAllTaskAsync().execute()
+            if (result!!) {
+                var paidAmount = 0
+                var payableAmount = 0
+                for (paid in paidList) {
+                    paidAmount += paid.toInt()
+                }
+
+                for (payable in payableList) {
+                    payableAmount += payable.toInt()
+                }
+                readPaymentAmountFromFireBase(payableAmount, paidAmount)
+            } else {
+                progress.dismiss()
+            }
         }
     }
 
     private fun readPaymentVersionToFireBase() {
-        val outletNameForDB = preferenceSharedUtils.getOutletName()
         if (AppUtils.networkConnectivityCheck(this@HomeActivity)) {
-            if (outletNameForDB != null && outletNameForDB.isNotEmpty()
-                && outletNameForDB.isNotBlank() && outletNameForDB != "NA") {
+            if (AppUtils.OUTLET_NAME != null && AppUtils.OUTLET_NAME.isNotEmpty()
+                && AppUtils.OUTLET_NAME.isNotBlank() && AppUtils.OUTLET_NAME != "NA"
+            ) {
                 progress.show()
                 val fireBaseReference = FirebaseDatabase.getInstance()
-                    .getReference(outletNameForDB)
+                    .getReference(AppUtils.OUTLET_NAME)
+                    .child(ConstantUtils.TOTAL_AMOUNT)
                     .child(ConstantUtils.PAYMENT_VERSION)
 
                 fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -329,14 +361,17 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
 
                     override fun onDataChange(dataSnapShot: DataSnapshot) {
                         if (dataSnapShot.exists()) {
-                            val version : Double = dataSnapShot.getValue(Double::class.java)!!
+                            val version: Double = dataSnapShot.getValue(Double::class.java)!!
                             if (version > preferenceSharedUtils.getPayVersionUpdate()?.toDouble()!!) {
                                 preferenceSharedUtils.setPayVersionUpdate(version.toFloat())
-                                getPayAccountDetailsFromFireBase()
+                                getPayAccountDetailsFromFireBase(AppUtils.OUTLET_NAME)
+                            } else {
+                                readAmountFromFireBase()
                             }
                             progress.dismiss()
                         } else {
                             progress.dismiss()
+                            readAmountFromFireBase()
                         }
                     }
                 })
@@ -345,11 +380,9 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
     }
 
 
-    private fun getPayAccountDetailsFromFireBase() {
+    private fun getPayAccountDetailsFromFireBase(outletNameForDB: String) {
         if (AppUtils.networkConnectivityCheck(this@HomeActivity)) {
-            val outletNameForDB = preferenceSharedUtils.getOutletName()
-            if (outletNameForDB != null && outletNameForDB.isNotEmpty()
-                && outletNameForDB.isNotBlank() && outletNameForDB != "NA") {
+            if (outletNameForDB.isNotEmpty() && outletNameForDB != "NA") {
                 progress.show()
                 val fireBaseReference = FirebaseDatabase.getInstance()
                     .getReference(outletNameForDB)
@@ -359,61 +392,112 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
                     override fun onCancelled(error: DatabaseError) {
                         progress.dismiss()
                     }
+
                     override fun onDataChange(dataSnapShot: DataSnapshot) {
                         if (dataSnapShot.exists()) {
                             isOneTime = true
                             DataBaseInsertDeleteAsync(dataSnapShot).execute()
                         } else {
                             progress.dismiss()
-                            FetchAllTaskAsync().execute()
                         }
                     }
                 })
-            } else {
-                FetchAllTaskAsync().execute()
             }
-        } else {
-            FetchAllTaskAsync().execute()
         }
     }
 
-    inner class FetchAllTaskAsync : AsyncTask<Void, Void, List<TaskDataTable>>() {
-        override fun onPreExecute() {
-            super.onPreExecute()
+    private fun readPaymentAmountFromFireBase(payableSum: Int, paidSum: Int) {
+        if (AppUtils.networkConnectivityCheck(this)) {
             progress.show()
-        }
-        override fun doInBackground(vararg params: Void?): List<TaskDataTable> {
-            return TaskRepository(this@HomeActivity).queryAllTask() as ArrayList<TaskDataTable>
-        }
+            val fireBaseReference = FirebaseDatabase.getInstance()
+                .getReference(AppUtils.OUTLET_NAME)
+                .child(ConstantUtils.TOTAL_AMOUNT)
 
-        override fun onPostExecute(result: List<TaskDataTable>?) {
-            super.onPostExecute(result)
-            if (result != null && result.isNotEmpty()) {
-                totalPaidSum = 0
-                totalPayableSum = 0
-                for (element in result.iterator()) {
-                    with(element){
-                        if (taskCompleted) {
-                            /*TODO: PAID*/
-                            totalPaidSum += amount.toInt()
-                        } else {
-                            /*TODO: PAYABLE*/
-                            totalPayableSum += amount.toInt()
+            fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(error: DatabaseError) {
+                    progress.dismiss()
+                }
+
+                override fun onDataChange(dataSnapShot: DataSnapshot) {
+                    if (dataSnapShot.exists()) {
+                        val totalPayableSum =
+                            dataSnapShot.child(ConstantUtils.PAYABLE_AMOUNT).getValue(Int::class.java)!!
+                        val totalPaidSum = dataSnapShot.child(ConstantUtils.PAID_AMOUNT).getValue(Int::class.java)!!
+
+                        if (totalPayableSum < payableSum || totalPayableSum > payableSum) {
+                            FirebaseDatabase.getInstance()
+                                .getReference(AppUtils.OUTLET_NAME)
+                                .child(ConstantUtils.TOTAL_AMOUNT)
+                                .child(ConstantUtils.PAYABLE_AMOUNT)
+                                .setValue(payableSum)
                         }
+
+                        if (totalPaidSum < paidSum || totalPaidSum > paidSum) {
+                            FirebaseDatabase.getInstance()
+                                .getReference(AppUtils.OUTLET_NAME)
+                                .child(ConstantUtils.TOTAL_AMOUNT)
+                                .child(ConstantUtils.PAID_AMOUNT)
+                                .setValue(paidSum)
+                        }
+                        readAmountFromFireBase()
+                        progress.dismiss()
+                    } else {
+                        progress.dismiss()
                     }
                 }
-            }
-
-            amountViewModelList.clear()
-            amountViewModelList.add(AmountViewModel("Payable Amount", totalPayableSum))
-            amountViewModelList.add(AmountViewModel("Paid Amount", totalPaidSum))
-            progress.dismiss()
-            fragmentLauncher()
+            })
         }
     }
 
-    override fun homeSelectListener(position : Int) {
-        when(position) {
+    private fun readAmountFromFireBase() {
+        if (AppUtils.networkConnectivityCheck(this)) {
+            var totalPaidSum = 0
+            var totalPayableSum = 0
+            var totalGrossBusiness = 0
+            var totalExpensesBusiness = 0
+            progress.show()
+            val fireBaseReference = FirebaseDatabase.getInstance()
+                .getReference(AppUtils.OUTLET_NAME)
+                .child(ConstantUtils.TOTAL_AMOUNT)
+
+            fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(error: DatabaseError) {
+                    progress.dismiss()
+                }
+
+                override fun onDataChange(dataSnapShot: DataSnapshot) {
+                    if (dataSnapShot.exists()) {
+                        totalPayableSum = dataSnapShot.child(ConstantUtils.PAYABLE_AMOUNT).getValue(Int::class.java)!!
+                        totalPaidSum = dataSnapShot.child(ConstantUtils.PAID_AMOUNT).getValue(Int::class.java)!!
+                        totalGrossBusiness = dataSnapShot.child(ConstantUtils.GROSS_AMOUNT).getValue(Int::class.java)!!
+                        totalExpensesBusiness =
+                            dataSnapShot.child(ConstantUtils.EXPENSES_AMOUNT).getValue(Int::class.java)!!
+
+                        amountViewModelList.clear()
+                        amountViewModelList.add(AmountViewModel("Payable Amount", totalPayableSum))
+                        amountViewModelList.add(AmountViewModel("Paid Amount", totalPaidSum))
+                        amountViewModelList.add(AmountViewModel("Business Expenses", totalExpensesBusiness))
+                        amountViewModelList.add(AmountViewModel("Gross Business", totalGrossBusiness))
+                        amountViewModelList.add(AmountViewModel("Net Business", (totalGrossBusiness - totalExpensesBusiness)))
+                        fragmentLauncher()
+                        progress.dismiss()
+                    } else {
+                        amountViewModelList.clear()
+                        amountViewModelList.add(AmountViewModel("Payable Amount", totalPayableSum))
+                        amountViewModelList.add(AmountViewModel("Paid Amount", totalPaidSum))
+                        amountViewModelList.add(AmountViewModel("Business Expenses", totalExpensesBusiness))
+                        amountViewModelList.add(AmountViewModel("Gross Business", totalGrossBusiness))
+                        amountViewModelList.add(AmountViewModel("Net Business", (totalGrossBusiness - totalExpensesBusiness)))
+                        fragmentLauncher()
+                        progress.dismiss()
+                    }
+                }
+            })
+        }
+    }
+
+    override fun homeSelectListener(position: Int) {
+        when (position) {
             0 -> {
                 isPaid = false
                 FRAGMENT_POSITION = 1
@@ -432,9 +516,9 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
         }
     }
 
-    override fun payActionListener(slNo : Int) {
+    override fun payActionListener(slNo: Int) {
         clearBackStack()
-        when(slNo) {
+        when (slNo) {
             -1 -> {
                 startActivityForResult(
                     Intent(this, AddTaskActivity::class.java), ConstantUtils.PAY_LIST_CODE
@@ -457,6 +541,9 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
         if (requestCode == ConstantUtils.PAY_LIST_CODE && resultCode == Activity.RESULT_OK && FRAGMENT_POSITION == 1) {
             FRAGMENT_POSITION = 1
             readPaymentVersionToFireBase()
+        } else if (requestCode == ConstantUtils.PERMISSION_BUSINESS && resultCode == Activity.RESULT_CANCELED) {
+            FRAGMENT_POSITION = 0
+            readAmountFromFireBase()
         }
     }
 
@@ -501,7 +588,7 @@ class HomeActivity : AppCompatActivity(), UserPaymentFragment.PayInterface, User
         } else if (FRAGMENT_POSITION > 0) {
             FRAGMENT_POSITION = 0
             clearBackStack()
-            FetchAllTaskAsync().execute()
+            readPaymentVersionToFireBase()
         } else {
             val intent = Intent(Intent.ACTION_MAIN)
             intent.addCategory(Intent.CATEGORY_HOME)

@@ -170,13 +170,12 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
     private fun readClientsFromFireBase(name: String) {
         if (AppUtils.networkConnectivityCheck(this@AddTaskActivity)) {
             clientsName = ArrayList()
-            val outletNameForDB = preferenceSharedUtils.getOutletName()
-            if (outletNameForDB != null && outletNameForDB.isNotEmpty()
-                && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
+
+            if (AppUtils.OUTLET_NAME.isNotEmpty() && AppUtils.OUTLET_NAME.isNotBlank() && AppUtils.OUTLET_NAME != "NA"
             ) {
                 progress.show()
                 val fireBaseReference = FirebaseDatabase.getInstance()
-                    .getReference(outletNameForDB)
+                    .getReference(AppUtils.OUTLET_NAME)
                     .child(ConstantUtils.CLIENT)
 
                 fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -191,7 +190,7 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
                                 clientList.add(ds.getValue(SingleEntityModel::class.java)!!)
                             }
                             for (element in clientList) {
-                                clientsName.add(element.businessOutlet)
+                                clientsName.add(element.inputData)
                             }
                             setupClientTextView(name)
                             progress.dismiss()
@@ -229,13 +228,11 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun writeClientToFireBase(client: String) {
         if (client.isNotEmpty() && AppUtils.networkConnectivityCheck(this@AddTaskActivity)) {
-            val outletNameForDB = preferenceSharedUtils.getOutletName()
-            if (outletNameForDB != null && outletNameForDB.isNotEmpty()
-                && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
+            if (AppUtils.OUTLET_NAME.isNotEmpty() && AppUtils.OUTLET_NAME.isNotBlank() && AppUtils.OUTLET_NAME != "NA"
             ) {
                 val model = SingleEntityModel(client)
                 FirebaseDatabase.getInstance()
-                    .getReference(outletNameForDB)
+                    .getReference(AppUtils.OUTLET_NAME)
                     .child(ConstantUtils.CLIENT)
                     .push()
                     .setValue(model)
@@ -247,17 +244,16 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun writePaymentToFireBase(paymentModelMain: PaymentModelMain) {
         if (AppUtils.networkConnectivityCheck(this@AddTaskActivity)) {
-            val outletNameForDB = preferenceSharedUtils.getOutletName()
-            if (outletNameForDB != null && outletNameForDB.isNotEmpty()
-                && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
+            if (AppUtils.OUTLET_NAME != null && AppUtils.OUTLET_NAME.isNotEmpty()
+                && AppUtils.OUTLET_NAME.isNotBlank() && AppUtils.OUTLET_NAME != "NA"
             ) {
                 FirebaseDatabase.getInstance()
-                    .getReference(outletNameForDB)
+                    .getReference(AppUtils.OUTLET_NAME)
                     .child(ConstantUtils.PAYMENT)
                     .child(paymentModelMain.uniqueKey)
                     .setValue(paymentModelMain)
                 if (!isModify) {
-                    writePaymentVersionToFireBase(outletNameForDB)
+                    writePaymentVersionToFireBase(AppUtils.OUTLET_NAME)
                 }
             }
         }
@@ -271,6 +267,7 @@ class AddTaskActivity : AppCompatActivity(), View.OnClickListener {
 
                 val fireBaseReference = FirebaseDatabase.getInstance()
                     .getReference(outletNameForDB)
+                    .child(ConstantUtils.TOTAL_AMOUNT)
                     .child(ConstantUtils.PAYMENT_VERSION)
 
                 fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {

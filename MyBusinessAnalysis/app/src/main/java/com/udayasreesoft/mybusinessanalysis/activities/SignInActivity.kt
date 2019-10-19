@@ -194,7 +194,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
             progress.setMessage("Fetching Outlet Name")
             progress.show()
             val firebaseReference = FirebaseDatabase.getInstance()
-                .getReference(ConstantUtils.DETAILS)
+                .getReference(ConstantUtils.ADMIN)
                 .child(ConstantUtils.OUTLET)
 
             firebaseReference.addValueEventListener(object : ValueEventListener {
@@ -209,7 +209,7 @@ class SignInActivity : AppCompatActivity(), View.OnClickListener {
                     }
                     val outletName = ArrayList<String>()
                     for (element in outletList) {
-                        outletName.add(element.businessOutlet)
+                        outletName.add(element.inputData)
                     }
                     setupOutletTextView(outletName)
                     progress.dismiss()

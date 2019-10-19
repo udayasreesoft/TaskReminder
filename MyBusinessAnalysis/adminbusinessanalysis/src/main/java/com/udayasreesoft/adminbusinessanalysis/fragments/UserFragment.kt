@@ -79,7 +79,7 @@ class UserFragment : Fragment(), View.OnClickListener {
         if (AppUtils.networkConnectivityCheck(context!!)) {
             progress.show()
             val firebaseReference = FirebaseDatabase.getInstance()
-                .getReference(ConstantUtils.DETAILS)
+                .getReference(ConstantUtils.ADMIN)
                 .child(ConstantUtils.OUTLET)
 
             firebaseReference.addValueEventListener(object : ValueEventListener {
@@ -93,7 +93,7 @@ class UserFragment : Fragment(), View.OnClickListener {
                         outletList.add(ds.getValue(SingleEntityModel::class.java)!!)
                     }
                     for (element in outletList) {
-                        outletNameList.add(element.businessOutlet)
+                        outletNameList.add(element.inputData)
                     }
                     setupOutletTextView(outletNameList)
                     progress.dismiss()
@@ -141,7 +141,7 @@ class UserFragment : Fragment(), View.OnClickListener {
     ) {
         if (AppUtils.networkConnectivityCheck(context!!)) {
             FirebaseDatabase.getInstance()
-                .getReference(ConstantUtils.DETAILS)
+                .getReference(ConstantUtils.ADMIN)
                 .child(ConstantUtils.OUTLET)
                 .push()
                 .setValue(singleEntity) { error, _ ->
@@ -207,8 +207,33 @@ class UserFragment : Fragment(), View.OnClickListener {
                         if (error == null) {
                             FirebaseDatabase.getInstance()
                                 .getReference(userSignInModel.userOutlet)
+                                .child(ConstantUtils.TOTAL_AMOUNT)
                                 .child(ConstantUtils.PAYMENT_VERSION)
                                 .setValue(0.0)
+
+                            FirebaseDatabase.getInstance()
+                                .getReference(userSignInModel.userOutlet)
+                                .child(ConstantUtils.TOTAL_AMOUNT)
+                                .child(ConstantUtils.PAYABLE_AMOUNT)
+                                .setValue(0)
+
+                            FirebaseDatabase.getInstance()
+                                .getReference(userSignInModel.userOutlet)
+                                .child(ConstantUtils.TOTAL_AMOUNT)
+                                .child(ConstantUtils.PAID_AMOUNT)
+                                .setValue(0)
+
+                            FirebaseDatabase.getInstance()
+                                .getReference(userSignInModel.userOutlet)
+                                .child(ConstantUtils.TOTAL_AMOUNT)
+                                .child(ConstantUtils.EXPENSES_AMOUNT)
+                                .setValue(0)
+
+                            FirebaseDatabase.getInstance()
+                                .getReference(userSignInModel.userOutlet)
+                                .child(ConstantUtils.TOTAL_AMOUNT)
+                                .child(ConstantUtils.GROSS_AMOUNT)
+                                .setValue(0)
 
                             userNameText.setText("")
                             userMobileText.setText("")

@@ -276,15 +276,14 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
                         view: View?,
                         loadedImage: Bitmap?
                     ) {
-                        val companyName = preferenceSharedUtils.getOutletName() ?: ""
-                        if (companyName.isNotEmpty() && companyName.isNotBlank() && companyName != "NA") {
+                        if (AppUtils.OUTLET_NAME.isNotEmpty() && AppUtils.OUTLET_NAME.isNotBlank() && AppUtils.OUTLET_NAME != "NA") {
                             progress.show()
                             val ext = url.substring(url.lastIndexOf("."))
                             val storageReference: StorageReference = FirebaseStorage.getInstance()
-                                .getReference(companyName.plus("/"))
+                                .getReference(AppUtils.OUTLET_NAME.plus("/"))
                                 .child(ConstantUtils.OUTLET_PROFILE)
                                 .child(
-                                    "${companyName}_${if (isLogoImage) {
+                                    "${AppUtils.OUTLET_NAME}_${if (isLogoImage) {
                                         "Logo"
                                     } else {
                                         "Banner"
@@ -331,13 +330,12 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
     }
 
     private fun readOutletDetailsFromFireBase() {
-        val outletNameForDB = preferenceSharedUtils.getOutletName()!!
-        if (AppUtils.networkConnectivityCheck(context!!) && outletNameForDB != null && outletNameForDB.isNotEmpty()
-            && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
+        if (AppUtils.networkConnectivityCheck(context!!) && AppUtils.OUTLET_NAME != null && AppUtils.OUTLET_NAME.isNotEmpty()
+            && AppUtils.OUTLET_NAME.isNotBlank() && AppUtils.OUTLET_NAME != "NA"
         ) {
             progress.show()
             val fireBaseReference = FirebaseDatabase.getInstance()
-                .getReference(outletNameForDB)
+                .getReference(AppUtils.OUTLET_NAME)
                 .child(ConstantUtils.OUTLET_PROFILE)
 
             fireBaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -354,7 +352,7 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
                     } else {
                         setModelDataToView(
                             CompanyModel(
-                                preferenceSharedUtils.getOutletName(),
+                                AppUtils.OUTLET_NAME,
                                 "", "", ConstantUtils.DEFAULT_LOGO, ConstantUtils.DEFAULT_BANNER
                             )
                         )
@@ -401,9 +399,8 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
     }
 
     private fun writeOutletDetailsToFireBase() {
-        val outletNameForDB = preferenceSharedUtils.getOutletName()!!
-        if (AppUtils.networkConnectivityCheck(context!!) && outletNameForDB != null && outletNameForDB.isNotEmpty()
-            && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
+        if (AppUtils.networkConnectivityCheck(context!!) && AppUtils.OUTLET_NAME != null && AppUtils.OUTLET_NAME.isNotEmpty()
+            && AppUtils.OUTLET_NAME.isNotBlank() && AppUtils.OUTLET_NAME != "NA"
         ) {
             val name = outletName.text.toString()
             val contact = outletContact.text.toString()
@@ -414,7 +411,7 @@ class UserOutletSetupFragment : Fragment(), View.OnClickListener {
             ) {
                 progress.show()
                 FirebaseDatabase.getInstance()
-                    .getReference(outletNameForDB)
+                    .getReference(AppUtils.OUTLET_NAME)
                     .child(ConstantUtils.OUTLET_PROFILE)
                     .setValue(
                         CompanyModel(

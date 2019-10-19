@@ -142,12 +142,11 @@ class UserPaymentFragment : Fragment(), View.OnClickListener, PaymentTaskAdapter
     private fun changePaymentInFireBase(paymentModelMain: PaymentModelMain?) {
         if (AppUtils.networkConnectivityCheck(context!!) && paymentModelMain != null) {
             progress.show()
-            val outletNameForDB = preferenceSharedUtils.getOutletName()
-            if (outletNameForDB != null && outletNameForDB.isNotEmpty()
-                && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
+            if (AppUtils.OUTLET_NAME != null && AppUtils.OUTLET_NAME.isNotEmpty()
+                && AppUtils.OUTLET_NAME.isNotBlank() && AppUtils.OUTLET_NAME != "NA"
             ) {
                 FirebaseDatabase.getInstance()
-                    .getReference(outletNameForDB)
+                    .getReference(AppUtils.OUTLET_NAME)
                     .child(ConstantUtils.PAYMENT)
                     .child(paymentModelMain.uniqueKey)
                     .setValue(paymentModelMain)
@@ -162,12 +161,11 @@ class UserPaymentFragment : Fragment(), View.OnClickListener, PaymentTaskAdapter
     private fun deletePaymentInFireBase(result: TaskDataTable?) {
         if (AppUtils.networkConnectivityCheck(context!!) && result != null) {
             progress.show()
-            val outletNameForDB = preferenceSharedUtils.getOutletName()
-            if (outletNameForDB != null && outletNameForDB.isNotEmpty()
-                && outletNameForDB.isNotBlank() && outletNameForDB != "NA"
+            if (AppUtils.OUTLET_NAME != null && AppUtils.OUTLET_NAME.isNotEmpty()
+                && AppUtils.OUTLET_NAME.isNotBlank() && AppUtils.OUTLET_NAME != "NA"
             ) {
                 val fireBaseReference = FirebaseDatabase.getInstance()
-                    .getReference(outletNameForDB)
+                    .getReference(AppUtils.OUTLET_NAME)
                     .child(ConstantUtils.PAYMENT)
                     .child(result.uniqueKey)
 
